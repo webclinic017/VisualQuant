@@ -1,20 +1,16 @@
 import dash
 import dash_html_components as html
-import dash_core_components as dcc
-import plotly.express as px
-import pandas as pd
-from dash.dependencies import Input, Output
-import plotly.graph_objects as go
+import logging
 
-from visual_quant.app import app
+from visual_quant.data_objects.page import Page
 
-import visual_quant.parser.result_parser as result_parser
-
-chart = result_parser.get_chart("data/results.json", "Average Cross")
-print(chart)
-
-
-app.layout = html.Div(children=chart.get_div())
 
 if __name__ == "__main__":
+    app = dash.Dash(__name__)
+
+    logging.getLogger("visual_quant").setLevel(logging.DEBUG)
+    page = Page(app, "data/results.json")
+    page.load_all_charts()
+
+    app.layout = html.Div(children=page.get_all_dives())
     app.run_server(debug=True)
