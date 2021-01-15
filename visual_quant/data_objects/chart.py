@@ -8,7 +8,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 
-from visual_quant.data_objects.series import Series, to_unit
+from visual_quant.data_objects.series import Series
 
 
 class Chart:
@@ -74,7 +74,7 @@ class Chart:
             options.append({"label": s, "value": s})
         return options
 
-    def create_figures(self, names: list, x="x", y="y"):
+    def create_figures(self, names: list):
         fig = go.Figure(layout=self.layout)
         for name in names:
             s = self.series[name]
