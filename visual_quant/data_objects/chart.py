@@ -1,8 +1,5 @@
 import logging
-import pandas as pd
-import json
 
-import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -82,7 +79,7 @@ class Chart:
 
         return fig
 
-    def get_div(self):
+    def get_html(self):
         drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True)
         graph = dcc.Graph(id=f"{self.name}-graph")
         return html.Div(children=[drop_down, graph])

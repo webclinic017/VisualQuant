@@ -1,24 +1,43 @@
 import logging
-import dash_html_components as html
+import plotly.graph_objects as go
+import dash_core_components as dcc
 
 
 class List:
 
-    def __init__(self, column_count: int, column_width: int = 50):
+    def __init__(self, name, column_count: int, alignment="left", line_color="rgba(150, 150, 150, 255)", font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
         self.logger = logging.getLogger(__name__)
         self.column_count = column_count
-        self.column_width = column_width
+        self.name = name
+        self.header = ["<b>Name</b>", "<b>Value</b>"] * column_count
         self.entries = {}
+
+        self.alignment = alignment
+        self.line_color = line_color
+        self.font_color = font_color
+        self.fill_color = fill_color
 
     def add_entry(self, name: str, value):
         self.entries[name] = value
 
-    def children_html(self):
-        html_l = []
-        for child in self.entries:
-            html_l.append(html.Td(f"{child}{str(self.entries[child]).rjust(self.column_width)}"))
-        return html_l
+    def gen_cells(self):
+        entries_per_column = max(len(self.entries) // self.column_count, 1)
+        extra_entries = len(self.entries) % self.column_count if len(self.entries) > self.column_count else 0
+        keys = list(self.entries.keys())
+        values = list(self.entries.values())
+        columns = []
+        for i in range(0, len(self.entries) - extra_entries, entries_per_column):
+            l_column = keys[i:i + entries_per_column]
+            r_column = values[i:i + entries_per_column]
+            columns.append(l_column)
+            columns.append(r_column)
+        for i in range(0, extra_entries, 2):
+            columns[i].append(keys[-extra_entries - i])
+            columns[i + 1].append(values[-extra_entries - i])
+        return {"values": columns, "align": self.alignment, "line.color": self.line_color, "fill.color": self.fill_color, "font.color": self.font_color}
 
     def get_html(self):
-        html_list = html.Tr(children=self.children_html())
-        return html_list
+        fig = go.Figure(layout={"paper_bgcolor": self.fill_color, "plot_bgcolor": self.fill_color, "font.color": self.font_color, "title.text": self.name},
+                        data=[go.Table(cells=self.gen_cells(),
+                                       header={"values": self.header, "align": self.alignment, "line.color": self.line_color, "fill.color": self.fill_color, "font.color": self.font_color})])
+        return dcc.Graph(figure=fig)
