@@ -1,9 +1,10 @@
 import logging
 import pandas as pd
-import dash_core_components as dcc
+import dash
 import plotly.graph_objects as go
-
 from enum import Enum
+
+from visual_quant.components.component import Component
 
 
 class UnitType(Enum):
@@ -19,27 +20,16 @@ to_unit = {
 }
 
 
-class Series:
-    name = ""
-    values = None
-    unit = None
-    type = -1
-    color = None
+class Series(Component):
 
-    def __init__(self):
-        pass
+    def __init__(self, app: dash.Dash, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
+        super().__init__(app, name)
+        self.unit = unit
+        self.series_type = series_type
+        self.values = values
 
     @classmethod
-    def from_data(cls, name: str, unit: UnitType, type: int, values: pd.DataFrame):
-        obj = cls()
-        obj.name = name
-        obj.values = values
-        obj.unit = unit
-        obj.type = type
-        return obj
-
-    @classmethod
-    def from_json(cls, series_json: dict):
+    def from_json(cls, app, series_json: dict):
         logger = logging.getLogger(__name__)
         name = series_json["Name"]
 
@@ -51,7 +41,7 @@ class Series:
 
         df["x"] = pd.to_datetime(df["x"], unit="s")
 
-        return cls.from_data(name, to_unit[series_json["Unit"]], series_json["SeriesType"], df)
+        return cls(app, name, to_unit[series_json["Unit"]], series_json["SeriesType"], df)
 
     @property
     def draw_mode(self):
