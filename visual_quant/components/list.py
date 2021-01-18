@@ -1,45 +1,35 @@
 import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash
+import dash_table
+import pandas as pd
 
 from visual_quant.components.component import Component
 
 
 class List(Component):
 
-    def __init__(self, app: dash.Dash, name: str, column_count: int, alignment="left", line_color="rgba(150, 150, 150, 255)", font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
+    def __init__(self, app: dash.Dash, name: str, column_count: int, alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
         super().__init__(app, name)
         self.column_count = column_count
         self.header = ["<b>Name</b>", "<b>Value</b>"] * column_count
-        self.entries = {}
+        self.entries = pd.DataFrame()
 
         self.alignment = alignment
-        self.line_color = line_color
+        self.font_size = font_size
         self.font_color = font_color
         self.fill_color = fill_color
 
-    def add_entry(self, name: str, value):
-        self.entries[name] = value
-
-    @property
-    def cells(self):
-        entries_per_column = max(len(self.entries) // self.column_count, 1)
-        extra_entries = len(self.entries) % self.column_count if len(self.entries) > self.column_count else 0
-        keys = list(self.entries.keys())
-        values = list(self.entries.values())
-        columns = []
-        for i in range(0, len(self.entries) - extra_entries, entries_per_column):
-            l_column = keys[i:i + entries_per_column]
-            r_column = values[i:i + entries_per_column]
-            columns.append(l_column)
-            columns.append(r_column)
-        for i in range(0, extra_entries, 2):
-            columns[i].append(keys[-extra_entries - i])
-            columns[i + 1].append(values[-extra_entries - i])
-        return {"values": columns, "align": self.alignment, "line.color": self.line_color, "fill.color": self.fill_color, "font.color": self.font_color}
+    def add_entry(self, data: pd.DataFrame):
+        self.logger.debug(f"adding data\n{data}")
+        self.entries.append(data, ignore_index=True)
 
     def get_html(self):
-        fig = go.Figure(layout={"paper_bgcolor": self.fill_color, "plot_bgcolor": self.fill_color, "font.color": self.font_color, "title.text": self.name},
-                        data=[go.Table(cells=self.cells,
-                                       header={"values": self.header, "align": self.alignment, "line.color": self.line_color, "fill.color": self.fill_color, "font.color": self.font_color})])
-        return dcc.Graph(figure=fig)
+        self.logger.debug(f"getting html list data {self.entries}")
+        table = dash_table.DataTable(data=self.entries.to_dict("records"),
+                                     columns=[{"name": i, "id": i} for i in self.entries.columns],
+                                     style_as_list_view=True,
+                                     style_cell={'textAlign': 'left', 'backgroundColor': self.fill_color, "color": self.font_color, "font_size": f"{self.font_size}px"},
+                                     style_cell_conditional=[{'if': {'column_id': "value"}, 'textAlign': 'right'}],
+                                     style_header={'display': 'none'})
+        return table

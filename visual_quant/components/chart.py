@@ -17,11 +17,11 @@ class Chart(Component):
 
         app.callback(Output(f"{self.name}-graph", "figure"), [Input(f"{self.name}-dropdown", "value")])(self.create_figures)
 
+        self.bg_color = bg_color
         self.layout = {
             "paper_bgcolor": bg_color,
             "plot_bgcolor": bg_color,
             "font.color": font_color,
-            "title.text": self.name
         }
 
     # constructors
@@ -43,8 +43,8 @@ class Chart(Component):
         series = []
         for s in series_json:
             s = series_json[s]
-            if Series.from_json(s) is not None:
-                series.append(Series.from_json(s))
+            if Series.from_json(app, s) is not None:
+                series.append(Series.from_json(app, s))
 
         return cls.from_series(app, name, series)
 
@@ -79,6 +79,6 @@ class Chart(Component):
         return fig
 
     def get_html(self):
-        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True)
+        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, style={"background-color": self.bg_color})
         graph = dcc.Graph(id=f"{self.name}-graph")
         return html.Div(children=[drop_down, graph])

@@ -49,7 +49,7 @@ class Series(Component):
             0: "lines",
             1: "markers"
         }
-        return type_to_draw_mode.get(self.type, "lines")
+        return type_to_draw_mode.get(self.series_type, "lines")
 
     def __str__(self):
         return f"Series: {self.name}\n{self.values}\n"
