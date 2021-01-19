@@ -2,7 +2,6 @@ import json
 import logging
 import dash
 import dash_html_components as html
-import pandas as pd
 
 from visual_quant.components.chart import Chart
 from visual_quant.components.list import List
@@ -11,12 +10,9 @@ from visual_quant.components.component import Component
 
 class Container(Component):
 
-    def __init__(self, app: dash.Dash, name: str, result_file: str, columns: list=[1], rows: list=[1], gap: int=15):
-        super().__init__(app, name)
+    def __init__(self, app: dash.Dash, name: str, result_file: str):
+        super().__init__(app, name, class_names=["container", name])
         self.result_file = result_file
-        self.columns = columns
-        self.rows = rows
-        self.gap = gap
 
         with open(result_file, "r") as f:
             self.config = json.load(f)
@@ -24,7 +20,7 @@ class Container(Component):
         self.elements = {}
 
     @classmethod
-    def create_page(cls, app: dash.Dash, name: str, path: str, result_file: str, style: dict = {}):
+    def create_container(cls, app: dash.Dash, name: str, path: str, result_file: str, style: dict = {}):
         page = cls(app, name, result_file, style)
         path_list = path.split(".")
         data = page.config
@@ -44,19 +40,6 @@ class Container(Component):
         else:
             page.logger.warning(f"cant load from given path: {path}, empty page returned")
         return page
-
-    @property
-    def style(self):
-        gtc = " ".join([f"{x}fr" if type(x) is int else "auto" for x in self.columns])
-        gtr = " ".join([f"{x}fr" if type(x) is int else "auto" for x in self.rows])
-        style = {
-            "display": "grid",
-            "grid-template-columns": gtc,
-            "grid-template-rows": gtr,
-            "gap": f"{self.gap}px"
-        }
-
-        return style
 
     def load_all_charts(self):
         try:
@@ -78,31 +61,29 @@ class Container(Component):
 
         self.elements[name] = Chart.from_json(self.app, chart_json)
 
-    def load_list(self, name: str, path: str, columns_count: int):
-        self.logger.debug(f"loading list {name}")
+    def load_list(self, list_name: str, path: str):
+        self.logger.debug(f"loading list {list_name}")
         path_list = path.split(".")
-        list_json = self.config
+        data = self.config
         try:
-            for n in path_list:
-                list_json = list_json[n]
+            for p in path_list:
+                data = data[p]
         except KeyError as e:
-            self.logger.error(f"did not find list named {name} in result file {self.result_file}\n{e}")
+            self.logger.error(f"did not find list at {path} in result file {self.result_file}\n{e}")
 
-        html_list = List(self.app, name, columns_count)
-
-        for entry_name in list_json:
-            value = list_json[entry_name]
-            if type(list_json[entry_name]) not in [dict, list]:
-                html_list.add_entry(pd.DataFrame.from_dict({entry_name: value}, orient="index"))
-
-        self.elements[name] = html_list
+        if type(data) is dict:
+            self.elements[list_name] = List.from_dict(self.app, list_name, data)
+        elif type(data) is list:
+            # TODO
+            col = {"Symbol": "Value"} if list_name == "ClosedTrades" else None
+            self.elements[list_name] = List.from_list(self.app, list_name, data, collapse=col)
 
     def add_element(self, name: str, ele: Component):
         self.logger.debug(f"adding element {name}")
         self.elements[name] = ele
 
     def add_container(self, container):
-        self.logger.debug(f"adding page {container.name}")
+        self.logger.debug(f"adding container {container.name}")
         self.elements[container.name] = container
 
     def get_one_html(self, name: str):
@@ -112,7 +93,7 @@ class Container(Component):
             self.logger.warning(f"the element named {name} was not found")
 
     def get_html(self):
-        return html.Div(children=self.html_list(), style=self.style)
+        return self.get_div(children=[html.H1(self.name), html.Div(children=self.html_list(), className=f"grid {self.name}")])
 
     def html_list(self):
         return [ele.get_html() for ele in self.elements.values()]

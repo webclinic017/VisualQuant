@@ -23,7 +23,7 @@ to_unit = {
 class Series(Component):
 
     def __init__(self, app: dash.Dash, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
-        super().__init__(app, name)
+        super().__init__(app, name, class_names=["series", name])
         self.unit = unit
         self.series_type = series_type
         self.values = values
@@ -55,4 +55,10 @@ class Series(Component):
         return f"Series: {self.name}\n{self.values}\n"
 
     def get_figure(self, x="x", y="y"):
-        return go.Scatter(x=self.values[x], y=self.values[y], mode=self.draw_mode, name=self.name)
+        color = None
+        if self.draw_mode == "markers":
+            if "buy" in self.name.lower():
+                color = "rgba(0, 255, 0, 255)"
+            elif "sell" in self.name.lower():
+                color = "rgba(255, 0, 0, 255)"
+        return go.Scatter(x=self.values[x], y=self.values[y], mode=self.draw_mode, name=self.name, marker_color=color)

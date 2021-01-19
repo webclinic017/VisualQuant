@@ -11,18 +11,9 @@ from visual_quant.components.component import Component
 
 class Chart(Component):
 
-    def __init__(self, app, name, bg_color="rgba(0, 0, 0, 0)", font_color="rgba(200, 200, 200, 255)"):
-        super().__init__(app, name)
+    def __init__(self, app, name):
+        super().__init__(app, name, class_names=["chart", name])
         self.series = {}
-
-        app.callback(Output(f"{self.name}-graph", "figure"), [Input(f"{self.name}-dropdown", "value")])(self.create_figures)
-
-        self.bg_color = bg_color
-        self.layout = {
-            "paper_bgcolor": bg_color,
-            "plot_bgcolor": bg_color,
-            "font.color": font_color,
-        }
 
     # constructors
 
@@ -56,12 +47,33 @@ class Chart(Component):
             data_frames += str(self.series[s])
         return f"Chart: {self.name}\n{data_frames}"
 
+    # properties
+
+    @property
+    def layout(self):
+        layout = {
+            "paper_bgcolor": "rgba(0, 0, 0, 0)",
+            "plot_bgcolor": "rgba(0, 0, 0, 0)",
+            "title.text": self.name,
+            "title.font.color": "rgba(220, 220, 220, 255)",
+            "legend.font.color": "rgba(220, 220, 220, 255)"
+        }
+
+        return layout
+
     # methods
+
+    def set_callback(self):
+        if len(self.series) > 0:
+            self.app.callback( Output(f"{self.name}-graph", "figure"), [Input(f"{self.name}-dropdown", "value")])(self.create_figures)
 
     def add_series(self, series: Series):
         if series.name in self.series:
             self.logger.warning(f"The series named {series.name} already exists in the chart {self.name}")
         self.series[series.name] = series
+
+    def join(self, other: "Chart"):
+        self.series = {**self.series, **other.series}
 
     def get_options(self):
         options = []
@@ -79,6 +91,9 @@ class Chart(Component):
         return fig
 
     def get_html(self):
-        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, style={"background-color": self.bg_color})
+        self.set_callback()
+        if len(self.series) == 0:
+            return None
+        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, className=f"dropdown {self.name}")
         graph = dcc.Graph(id=f"{self.name}-graph")
-        return html.Div(children=[drop_down, graph])
+        return self.get_div(children=[drop_down, graph])
