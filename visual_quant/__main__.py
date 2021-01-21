@@ -23,14 +23,9 @@ if __name__ == "__main__":
 
     logger.addHandler(handler)
 
-    elements = page.result_file_to_array(app, "data/results.json", lists, charts)
+    page = page.Page.from_file(app, "Results", "data/results.json", lists, charts)
 
-    app.layout = html.Div(
-        [
-            dbc.Col(elements["TotalPerformance.TradeStatistics"].get_html(), width=5),
-            dbc.Col(elements["Charts.Strategy Equity"].get_html(), width=5),
-        ]
-    )
+    app.layout = html.Div(page.get_html())
 
     app.title = "LEAN Results"
     app.run_server(debug=True)
