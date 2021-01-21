@@ -28,7 +28,7 @@ if __name__ == "__main__":
     app.layout = html.Div(
         [
             dbc.Col(elements["TotalPerformance.TradeStatistics"].get_html(), width=5),
-            dbc.Col(elements["Charts.Strategy Equity"].get_html(), width=5),
+            dbc.Col(elements["Charts.Strategy Equity"].get_html(), width=5)
         ]
     )
 
