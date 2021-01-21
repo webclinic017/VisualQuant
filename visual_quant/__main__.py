@@ -2,11 +2,11 @@ import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import logging
-import random
-import string
+from dash.dependencies import Input, Output
 
-from visual_quant.components.container import Container
 import visual_quant.components.page as page
+from visual_quant.components.container import Container
+from visual_quant.components.container_modal import ContainerModal
 
 lists = ["TotalPerformance.TradeStatistics", "TotalPerformance.PortfolioStatistics", "TotalPerformance.ClosedTrades"]
 charts = ["Charts.Average Cross", "Charts.Strategy Equity", "Charts.Trade Plot", "Charts.Benchmark"]
@@ -23,14 +23,15 @@ if __name__ == "__main__":
 
     logger.addHandler(handler)
 
-    elements = page.result_file_to_array(app, "data/results.json", lists, charts)
+    container = Container(app, "Top Level", "row")
+    modal = ContainerModal(app, "root-modal")
 
-    app.layout = html.Div(
-        [
-            dbc.Col(elements["TotalPerformance.TradeStatistics"].get_html(), width=5),
-            dbc.Col(elements["Charts.Strategy Equity"].get_html(), width=5)
-        ]
-    )
+    app.layout = html.Div([
+        container.get_html(),
+        modal.get_html()
+    ], id="root")
+
+    #  modal.set_callback()
 
     app.title = "LEAN Results"
     app.run_server(debug=True)

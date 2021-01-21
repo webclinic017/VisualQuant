@@ -3,16 +3,14 @@ import dash_html_components as html
 import logging
 
 
+# super class for all components
 class Component:
 
-    def __init__(self, app: dash.Dash, name: str, class_names: list = None):
+    def __init__(self, app: dash.Dash, name: str):
         self.app = app
         self.name = name
+        self.id = str(hash(id(self)))
         self.logger = logging.getLogger(__name__)
-        self.class_names = class_names
-
-    def get_div(self, **kwargs):
-        return html.Div(**kwargs, className=" ".join(self.class_names))
 
     def get_html(self, *args, **kwargs):
         self.logger.error(f"class {type(self)} does not provide the methode get_html")

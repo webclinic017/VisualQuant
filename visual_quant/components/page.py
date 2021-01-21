@@ -5,14 +5,14 @@ import dash_html_components as html
 
 from visual_quant.components.component import Component
 from visual_quant.components.container import Container
-from visual_quant.components.list import List
-from visual_quant.components.chart import Chart
 
 
+# hold a tree of components and provide buttons to add further ones
 class Page(Component):
 
     def __init__(self, app: dash.Dash, name: str, file_path: str):
-        super().__init__(app, name, class_names=["page", name])
+        super().__init__(app, name)
+
         self.elements = {}
 
         with open(file_path, "r") as f:
@@ -59,7 +59,7 @@ class Page(Component):
         self.elements[container.name] = container
 
     def get_html(self):
-        return self.get_div(children=self.html_list())
+        return html.Div(children=self.html_list())
 
     def html_list(self):
         return [ele.get_html() for ele in self.elements.values()]
