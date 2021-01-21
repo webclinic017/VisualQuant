@@ -94,6 +94,6 @@ class Chart(Component):
         self.set_callback()
         if len(self.series) == 0:
             return None
-        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, className=f"dropdown {self.name}")
+        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, className=f"dropdown {self.name}", style={"background-color": "rgba(0, 0, 0, 0)"})
         graph = dcc.Graph(id=f"{self.name}-graph")
         return self.get_div(children=[drop_down, graph])
