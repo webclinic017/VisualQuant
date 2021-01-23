@@ -6,10 +6,10 @@ import logging
 # super class for all components
 class Component:
 
-    def __init__(self, app: dash.Dash, name: str):
+    def __init__(self, app: dash.Dash, name: str, type: str, uid: int):
         self.app = app
         self.name = name
-        self.id = f"{self.name}-{id(self)}"
+        self.id = {"type": type, "uid": str(uid)}
         self.logger = logging.getLogger(__name__)
 
     def get_html(self, *args, **kwargs):

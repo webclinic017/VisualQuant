@@ -3,6 +3,7 @@ import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import dash
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from visual_quant.components.series import Series
@@ -16,20 +17,20 @@ class Chart(Component):
     # constructors
 
     def __init__(self, app, name):
-        super().__init__(app, name)
+        super().__init__(app, name, "chart", id(self))
         self.series = {}
-        self.drop_down = None
-        self.graph = None
+
+        self.drop_down = dcc.Dropdown(id={"type": "chart-dropdown", "uid": str(id(self))}, options=self.get_options(), value=list(self.series),
+                                      multi=True, className=f"dropdown {self.name}",
+                                      style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
+        self.graph = dcc.Graph(id={"type": "chart-graph", "uid": str(id(self))})
 
     # constructor for directly adding series to the chart
     @classmethod
     def from_series(cls, app: dash.Dash, name: str, series: list):
         obj = cls(app, name)
         for s in series:
-            print(f"add series {s}")
             obj.add_series(s)
-
-        obj.generate_html()
 
         return obj
 
@@ -80,16 +81,6 @@ class Chart(Component):
 
     # methods
 
-    def generate_html(self):
-        self.logger.debug(f"setting callback for chart {self.name}: {self.id}-graph, figure - {self.id}-dropdown, value")
-
-        self.drop_down = dcc.Dropdown(id=f"{self.id}-dropdown", options=self.get_options(), value=list(self.series),
-                                      multi=True, className=f"dropdown {self.name}",
-                                      style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
-        self.graph = dcc.Graph(id=f"{self.id}-graph")
-
-        self.app.callback(Output(f"{self.id}-graph", "figure"), [Input(f"{self.id}-dropdown", "value")])(self.create_figures)
-
     def add_series(self, series: Series):
         if series.name in self.series:
             self.logger.warning(f"The series named {series.name} already exists in the chart {self.name}")
@@ -106,6 +97,7 @@ class Chart(Component):
         self.logger.debug(f"get options. options are {options}")
         return options
 
+    # TODO
     # callback function for dropdown
     # build figure based on the values from the dropdown
     def create_figures(self, series_names: list):
@@ -119,4 +111,4 @@ class Chart(Component):
     def get_html(self):
         self.graph.figure = self.create_figures(list(self.series.keys()))
         self.logger.debug(f"getting html for graph {self.name}")
-        return html.Div(children=[self.drop_down, self.graph], style={"padding": "10px"})
+        return dbc.Col(children=[self.drop_down, self.graph], style={"padding": "10px", "width": "700px"})

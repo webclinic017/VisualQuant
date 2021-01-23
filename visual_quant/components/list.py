@@ -2,6 +2,7 @@ import dash
 import dash_table
 import pandas as pd
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 from visual_quant.components.component import Component
 
@@ -11,7 +12,7 @@ from visual_quant.components.component import Component
 class List(Component):
 
     def __init__(self, app: dash.Dash, name: str, direction: str = "vertical", alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
-        super().__init__(app, name)
+        super().__init__(app, name, "list", id(self))
         self.entries = pd.DataFrame()
 
         # TODO base color on theme directly
@@ -71,6 +72,6 @@ class List(Component):
                                          style_header={'display': 'none' if self.direction == "vertical" else ""},
                                          row_selectable=False)
         else:
-            self.logger.debug(f"list {self.name}, is empty")
+            self.logger.warning(f"list {self.name}, is empty")
             table = html.P("No Data Available")
-        return html.Div(children=[table])
+        return dbc.Col(table, width="auto", style={"padding": "10px"})

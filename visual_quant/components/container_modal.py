@@ -11,9 +11,8 @@ from visual_quant.components.component import Component
 class ContainerModal(Component):
 
     def __init__(self, app: dash.Dash, name: str, container: "Container"):
-        super().__init__(app, name)
+        super().__init__(app, name, "container-modal", id(container))
 
-        self.modal_callback_inputs = [Input("loader-modal-dropdown", "value")]
         self.container = container
 
         self.options = []
@@ -21,20 +20,14 @@ class ContainerModal(Component):
             self.data = json.load(f)
         self.load_options(self.data)
 
-        self.logger.debug(f"setting modal {self.name} callback")
-        self.app.callback(Output(self.container.id, "children"), [Input(f"{self.id}-dropdown", "value")])(self.dropdown_callback)
-
-    def dropdown_callback(self, value):
-        if value is not None:
-            chart_data = self.data
-            for p in value.split("."):
-                chart_data = chart_data[p]
-            self.container.load_chart(value, chart_data)
-        return self.container.html_list()
-
     def load_options(self, data: dict):
         for chart in data["Charts"]:
             self.options.append(f"Charts.{chart}")
+
+        for list in data["TotalPerformance"]:
+            self.options.append(f"TotalPerformance.{list}")
+
+        self.options.append("Container")
 
     def get_options(self):
         result = []
@@ -48,9 +41,16 @@ class ContainerModal(Component):
             dbc.ModalHeader(self.name),
             dbc.ModalBody([
                 # selection dropdown
-                dcc.Dropdown(id=f"{self.id}-dropdown", options=self.get_options(), value=None, style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(90, 90, 90, 255)"})
+                dcc.Dropdown(
+                    id={"type": "modal-dropdown", "uid": str(id(self.container))},
+                    options=self.get_options(),
+                    value=None,
+                    style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(90, 90, 90, 255)"}
+                )
             ])
-        ], id=self.id, is_open=False)
+        ],
+            id=self.id
+        )
 
         return modal
 
