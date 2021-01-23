@@ -5,12 +5,13 @@ import logging
 from visual_quant.components.container import Container
 from visual_quant.components.page import Page
 
-logger = logging.getLogger("visual_quant")
+FONT_AWESOME = "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
 
 if __name__ == "__main__":
 
-    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, FONT_AWESOME])
 
+    logger = logging.getLogger("visual_quant")
     logger.setLevel(logging.DEBUG)
 
     format = logging.Formatter("%(module)s - %(funcName)s - %(levelname)s :: %(message)s")
@@ -20,7 +21,7 @@ if __name__ == "__main__":
 
     container = Container(app, "Results", "col")
     page = Page(app, "Root Page")
-    page.add_container(container)
+    page.set_container(container)
 
     app.layout = page.get_html()
 

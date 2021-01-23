@@ -20,11 +20,6 @@ class Chart(Component):
         super().__init__(app, name, "chart", id(self))
         self.series = {}
 
-        self.drop_down = dcc.Dropdown(id={"type": "chart-dropdown", "uid": str(id(self))}, options=self.get_options(), value=list(self.series),
-                                      multi=True, className=f"dropdown {self.name}",
-                                      style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
-        self.graph = dcc.Graph(id={"type": "chart-graph", "uid": str(id(self))})
-
     # constructor for directly adding series to the chart
     @classmethod
     def from_series(cls, app: dash.Dash, name: str, series: list):
@@ -66,13 +61,13 @@ class Chart(Component):
 
     # properties
 
-    @property
-    def layout(self):
+    @staticmethod
+    def layout(name):
         # TODO dont hard code colors, base them on the selected theme
         layout = {
             "paper_bgcolor": "rgba(0, 0, 0, 0)",
             "plot_bgcolor": "rgba(0, 0, 0, 0)",
-            "title.text": self.name,
+            "title.text": name,
             "title.font.color": "rgba(220, 220, 220, 255)",
             "legend.font.color": "rgba(220, 220, 220, 255)",
         }
@@ -102,13 +97,32 @@ class Chart(Component):
     # build figure based on the values from the dropdown
     def create_figures(self, series_names: list):
         self.logger.debug(f"creating figures with series {list(self.series.keys())}")
-        fig = go.Figure(layout=self.layout)
+        fig = go.Figure(layout=self.layout(self.name))
         for name in series_names:
             s = self.series[name]
             fig.add_trace(s.get_figure())
         return fig
 
     def get_html(self):
-        self.graph.figure = self.create_figures(list(self.series.keys()))
+
+        drop_down = dcc.Dropdown(id={"type": "chart-dropdown", "uid": str(id(self))}, options=self.get_options(),
+                                 value=list(self.series.keys()),
+                                 multi=True,
+                                 className=f"dropdown {self.name}",
+                                 style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
+
+        graph = dcc.Graph(id={"type": "chart-graph", "uid": str(id(self))})
+
         self.logger.debug(f"getting html for graph {self.name}")
-        return dbc.Col(children=[self.drop_down, self.graph], style={"padding": "10px", "width": "700px"})
+
+        return dbc.Col(
+            dbc.Card(
+                [
+                    drop_down,
+                    graph
+                ]
+            ),
+            style={"padding": "10px", "width": "700px", "backgroundColor": "rgba(30, 30, 30, 255)"},
+            id=self.id,
+            className=self.name
+        )
