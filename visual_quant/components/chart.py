@@ -18,13 +18,19 @@ class Chart(Component):
     def __init__(self, app, name):
         super().__init__(app, name)
         self.series = {}
+        self.drop_down = None
+        self.graph = None
 
     # constructor for directly adding series to the chart
     @classmethod
     def from_series(cls, app: dash.Dash, name: str, series: list):
         obj = cls(app, name)
         for s in series:
+            print(f"add series {s}")
             obj.add_series(s)
+
+        obj.generate_html()
+
         return obj
 
     # load the chart from a json dict
@@ -74,9 +80,15 @@ class Chart(Component):
 
     # methods
 
-    def set_callback(self):
-        if len(self.series) > 0:
-            self.app.callback(Output(f"{self.name}-graph", "figure"), [Input(f"{self.name}-dropdown", "value")])(self.create_figures)
+    def generate_html(self):
+        self.logger.debug(f"setting callback for chart {self.name}: {self.id}-graph, figure - {self.id}-dropdown, value")
+
+        self.drop_down = dcc.Dropdown(id=f"{self.id}-dropdown", options=self.get_options(), value=list(self.series),
+                                      multi=True, className=f"dropdown {self.name}",
+                                      style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
+        self.graph = dcc.Graph(id=f"{self.id}-graph")
+
+        self.app.callback(Output(f"{self.id}-graph", "figure"), [Input(f"{self.id}-dropdown", "value")])(self.create_figures)
 
     def add_series(self, series: Series):
         if series.name in self.series:
@@ -91,28 +103,20 @@ class Chart(Component):
         options = []
         for s in self.series:
             options.append({"label": s, "value": s})
+        self.logger.debug(f"get options. options are {options}")
         return options
 
     # callback function for dropdown
     # build figure based on the values from the dropdown
     def create_figures(self, series_names: list):
+        self.logger.debug(f"creating figures with series {list(self.series.keys())}")
         fig = go.Figure(layout=self.layout)
         for name in series_names:
             s = self.series[name]
             fig.add_trace(s.get_figure())
-
         return fig
 
     def get_html(self):
-        # register the callback only when needed, so only when it is rendered to avoid errors because ids missing in app layout
-        self.set_callback()
-
-        if len(self.series) == 0:
-            self.logger.warning(f"chart {self.name} does not contain any series. Won't render")
-            return None
-
-        drop_down = dcc.Dropdown(id=f"{self.name}-dropdown", options=self.get_options(), value=list(self.series), multi=True, className=f"dropdown {self.name}",
-                                 style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
-        graph = dcc.Graph(id=f"{self.name}-graph")
-
-        return html.Div(children=[drop_down, graph])
+        self.graph.figure = self.create_figures(list(self.series.keys()))
+        self.logger.debug(f"getting html for graph {self.name}")
+        return html.Div(children=[self.drop_down, self.graph], style={"padding": "10px"})

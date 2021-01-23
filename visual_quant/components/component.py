@@ -9,7 +9,7 @@ class Component:
     def __init__(self, app: dash.Dash, name: str):
         self.app = app
         self.name = name
-        self.id = str(hash(id(self)))
+        self.id = f"{self.name}-{id(self)}"
         self.logger = logging.getLogger(__name__)
 
     def get_html(self, *args, **kwargs):

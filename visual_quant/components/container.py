@@ -1,5 +1,3 @@
-import json
-import logging
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -17,16 +15,18 @@ class Container(Component):
     def __init__(self, app: dash.Dash, name: str, layout: str):
         super().__init__(app, name)
 
+        self.elements = {}
         self.layout = layout
         # decide when to make add buttons visible
         self.show_buttons = False
 
         button_id = f"{self.id}-button"
 
-        self.button = dbc.Button("Add", color="primary", className="add-button", id=button_id)
-        self.app.callback(Output("root-modal", "is_open"), [Input(button_id, "n_clicks")])(self.button_callback)
+        self.modal = ContainerModal(app, f"{self.name}", self)
 
-        self.elements = {}
+        self.button = dbc.Button("Add", color="primary", className="add-button", id=button_id, outline=True,
+                                 style={"display": "grid", "place-self": "center", })
+        self.app.callback(Output(self.modal.id, "is_open"), [Input(button_id, "n_clicks")])(self.button_callback)
 
     def load_chart(self, name: str, data: dict):
         self.logger.debug(f"loading chart {name}")
@@ -50,10 +50,11 @@ class Container(Component):
         self.elements[container.name] = container
 
     def get_html(self):
+        self.logger.debug(f"getting html for container {self.name}")
         if self.layout == "col":
-            html_obj = dbc.Col(self.html_list(), align="center", id=self.id)
+            html_obj = html.Div(self.html_list(), id=self.id)
         elif self.layout == "row":
-            html_obj = dbc.Row(self.html_list(), justify="center", id=self.id)
+            html_obj = html.Div(self.html_list(), id=self.id)
         else:
             self.logger.error(f"container layout {self.layout} is not supported. Choose from row, col")
             return None
@@ -66,12 +67,9 @@ class Container(Component):
 
     def html_list(self):
         # TODO clean up
-        html_list = [self.button] + [ele.get_html() for ele in self.elements.values()]
-        card_list = [dbc.Card(
-            dbc.CardBody([
-                html.H4(self.name.split(".")[-1], style={"display": "grid", "justify-self": "center"}),
-                x
-            ], style={"display": "grid", "justify-items": "stretch"}
-            ), style={"width": "300px"}) for x in html_list]
+        self.logger.debug(f"getting html_list for container {self.name}: {self.elements.keys()}")
+        html_list = [ele.get_html() for ele in self.elements.values()]
+        layout_list = [dbc.Row(dbc.Col([html.H4(self.name), self.button, self.modal.get_html()]) , align="center"),
+                       dbc.Row([dbc.Col(x, style={"width": "700px"}) for x in html_list])]
 
-        return card_list
+        return layout_list
