@@ -122,7 +122,7 @@ class Chart(Component):
                     graph
                 ]
             ),
-            style={"padding": "10px", "width": "700px", "backgroundColor": "rgba(30, 30, 30, 255)"},
+            style={"padding": "10px", "min-width": "900px"},
             id=self.id,
             className=self.name
         )

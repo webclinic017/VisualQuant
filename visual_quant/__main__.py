@@ -21,7 +21,6 @@ if __name__ == "__main__":
 
     container = Container(app, "Results", "col")
     page = Page(app, "Root Page")
-    page.set_container(container)
 
     app.layout = page.get_html()
 
