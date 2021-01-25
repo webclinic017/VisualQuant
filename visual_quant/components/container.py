@@ -23,14 +23,14 @@ class Container(Component):
             html.I(className="fas fa-plus fa-2x"),
             style={"color": "rgba(200, 200, 200, 255)", "backgroundColor": "rgba(0, 0, 0, 0)", "justify-self": "center"},
             outline=True,
-            id={"type": "add-element-button", "uid": id(self)}
+            id={"type": "open-container-modal-button", "uid": id(self)}
         )
 
         self.remove_button = dbc.Button(
             html.I(className="far fa-minus-square fa-2x"),
             style={"justify-self": "end", "color": "rgba(200, 200, 200, 255)"},
             color="rgba(0, 0, 0, 0)",
-            id={"type": "remove-button", "uid": id(self)}
+            id={"type": "remove-container-button", "uid": id(self)}
         )
 
     # overwrite the get_html function

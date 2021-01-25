@@ -32,12 +32,7 @@ class Page(Component):
             [
                 dbc.Row(
                     [
-                        dbc.Col(html.Img(src=ICON_LINK, height="35px")),
-                        dbc.Col(
-                            [
-
-                            ]
-                        )
+                        dbc.Col(html.Img(src=ICON_LINK, height="35px"))
                     ]
                 )
             ],
@@ -50,9 +45,10 @@ class Page(Component):
             html.I(className="fas fa-plus fa-2x"),
             style={"color": "rgba(200, 200, 200, 255)",
                    "backgroundColor": "rgba(0, 0, 0, 0)",
-                   "justify-self": "center"},
+                   "justify-self": "center",
+                   "margin": "10px"},
             outline=True,
-            id={"type": "add-container-button", "uid": id(self)}
+            id={"type": "open-page-modal-button", "uid": id(self)}
         )
 
         self.modal = PageModal(app, self)
@@ -62,10 +58,10 @@ class Page(Component):
 
         app.callback(
             Output({"type": "container-modal", "uid": MATCH}, "is_open"),
-            Input({"type": "add-element-button", "uid": MATCH}, "n_clicks"),
+            Input({"type": "open-container-modal-button", "uid": MATCH}, "n_clicks"),
             Input({"type": "modal-add-button", "uid": MATCH}, "n_clicks"),
-            State({"type": "container-modal", "uid": MATCH}, "id"),
-            initial_callback=False
+            State({"type": "container-modal", "uid": MATCH}, "is_open"),
+            prevent_initial_call=True
         )(self.open_modal)
 
         app.callback(
@@ -90,10 +86,10 @@ class Page(Component):
 
         app.callback(
             Output({"type": "page-modal", "uid": MATCH}, "is_open"),
-            Input({"type": "add-container-button", "uid": MATCH}, "n_clicks"),
+            Input({"type": "open-page-modal-button", "uid": MATCH}, "n_clicks"),
             Input({"type": "modal-add-button", "uid": MATCH}, "n_clicks"),
-            State({"type": "page-modal", "uid": MATCH}, "id"),
-            initial_callback=False
+            State({"type": "page-modal", "uid": MATCH}, "is_open"),
+            prevent_initial_call=True
         )(self.open_modal)
 
         app.callback(
@@ -139,20 +135,27 @@ class Page(Component):
 
     # patten-matching-callbacks
 
-    def open_modal(self, n_open, n_close, modal_id):
+    def open_modal(self, n_open, n_close, is_open):
         origin_id = self.get_id_from_ctx(dash.callback_context)
+
+        print(f"origin_id: {origin_id}, open: {n_open}, close: {n_close}, is_open {is_open} ", end="")
+
         if origin_id is None:
-            return True
+            return is_open
 
-        print(n_open, n_close)
+        open = self.is_clicked(f"open-{origin_id['uid']}", n_open)
+        close = self.is_clicked(f"close-{origin_id['uid']}", n_close)
 
-        open = self.is_clicked(f"open-{modal_id}", n_open)
-        close = self.is_clicked(f"close-{modal_id}", n_close)
+        print(f"open: {open}, close: {close}")
 
         if origin_id["type"] in ["add-element-button", "add-container-button"]:
-            return open
+            print("return", open)
+            return True
         elif origin_id["type"] == "modal-add-button":
+            print("return", not close)
             return not close
+        else:
+            return is_open
 
     def add_container_element(self, dropdown_value, input_value, n_click, children):
 
@@ -190,10 +193,6 @@ class Page(Component):
             return style
         else:
             return {"display": "none"}
-
-    def open_page_modal(self, n_clicks):
-        print("open modal", n_clicks)
-        return True#self.is_clicked("open page", n_clicks)
 
     def add_container(self, n_clicks, name, children):
         origin_id = self.get_id_from_ctx(dash.callback_context)
