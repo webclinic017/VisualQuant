@@ -17,8 +17,11 @@ class Chart(Component):
     # constructors
 
     def __init__(self, app, name):
-        super().__init__(app, name, "chart", id(self))
+        super().__init__(app, name)
         self.series = {}
+
+        self.dropdown_type = "chart-dropdown"
+        self.graph_type = "chart-graph"
 
     # constructor for directly adding series to the chart
     @classmethod
@@ -61,9 +64,11 @@ class Chart(Component):
 
     # properties
 
+    # methods
+
     @staticmethod
     def layout(name):
-        # TODO dont hard code colors, base them on the selected theme
+        # TODO don't hard code colors, base them on the selected theme
         layout = {
             "paper_bgcolor": "rgba(0, 0, 0, 0)",
             "plot_bgcolor": "rgba(0, 0, 0, 0)",
@@ -73,8 +78,6 @@ class Chart(Component):
         }
 
         return layout
-
-    # methods
 
     def add_series(self, series: Series):
         if series.name in self.series:
@@ -105,13 +108,13 @@ class Chart(Component):
 
     def get_html(self):
 
-        drop_down = dcc.Dropdown(id={"type": "chart-dropdown", "uid": str(id(self))}, options=self.get_options(),
+        drop_down = dcc.Dropdown(id={"name": self.name, "type": self.dropdown_type, "uid": self.uid}, options=self.get_options(),
                                  value=list(self.series.keys()),
                                  multi=True,
                                  className=f"dropdown {self.name}",
                                  style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
 
-        graph = dcc.Graph(id={"type": "chart-graph", "uid": str(id(self))})
+        graph = dcc.Graph(id={"name": self.name, "type": self.graph_type, "uid": self.uid})
 
         self.logger.debug(f"getting html for graph {self.name}")
 
@@ -122,7 +125,5 @@ class Chart(Component):
                     graph
                 ]
             ),
-            style={"padding": "10px", "min-width": "900px"},
-            id=self.id,
-            className=self.name
+            style={"padding": "10px", "min-width": "900px"}
         )

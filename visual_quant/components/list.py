@@ -11,8 +11,11 @@ from visual_quant.components.component import Component
 # consider splitting the 2 behaviors in subclasses
 class List(Component):
 
-    def __init__(self, app: dash.Dash, name: str, direction: str = "vertical", alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
-        super().__init__(app, name, "list", id(self))
+    # constructors
+
+    def __init__(self, app: dash.Dash, name: str, direction: str = "vertical", alignment="left", font_size=17,
+                 font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
+        super().__init__(app, name)
         self.entries = pd.DataFrame()
 
         # TODO base color on theme directly
@@ -48,15 +51,19 @@ class List(Component):
                         data[data.index(entry)][key] = entry[key][collapse[key]]
 
             if any([type(x) is dict for x in entry.values()]):
-                list_obj.logger.warning(f"a dict in the list {name} contains another dict. The dicts in the list should only contain int, float or str, you can collapse dicts to one entry.")
+                list_obj.logger.warning(
+                    f"a dict in the list {name} contains another dict. The dicts in the list should only contain int, float or str, you can collapse dicts to one entry.")
 
         list_obj.add_entries(pd.DataFrame.from_records(data))
 
         return list_obj
 
+    # methods
+
     def add_entries(self, data: pd.DataFrame):
         self.entries = self.entries.append(data, ignore_index=True)
 
+    # combine 2 lists
     def append(self, other: "List"):
         self.entries = self.entries.append(other.entries, ignore_index=True)
 
@@ -64,14 +71,27 @@ class List(Component):
         if not self.entries.empty:
             # self.logger.debug(f"list {self.name}, data\n{self.entries}")
             # TODO find a better way then this...
+            # TODO add support for multi column
             table = dash_table.DataTable(data=self.entries.to_dict("records"),
                                          columns=[{"name": str(i), "id": str(i)} for i in self.entries.columns],
                                          style_as_list_view=self.direction == "vertical",
-                                         style_cell={"textAlign": "right", "backgroundColor": self.fill_color, "color": self.font_color, "font_size": f"{self.font_size}px"},
-                                         style_cell_conditional=[{'if': {'column_id': self.entries.columns[0]}, 'textAlign': 'left'}],
+                                         style_cell={"textAlign": "right", "backgroundColor": self.fill_color,
+                                                     "color": self.font_color, "font_size": f"{self.font_size}px"},
+                                         style_cell_conditional=[
+                                             {'if': {'column_id': self.entries.columns[0]}, 'textAlign': 'left'}],
                                          style_header={'display': 'none' if self.direction == "vertical" else ""},
                                          row_selectable=False)
         else:
             self.logger.warning(f"list {self.name}, is empty")
             table = html.P("No Data Available")
-        return dbc.Col(table, width="auto", style={"padding": "10px"})
+        return dbc.Col(
+            [
+                dbc.Card(
+                    [
+                        dbc.CardHeader(html.H4(self.name)),
+                        dbc.CardBody(table, style={"width": "auto"})
+                    ]
+                )
+            ],
+            style={"padding": "10px", "min-width": "auto"}
+        )

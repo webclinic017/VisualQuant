@@ -27,13 +27,14 @@ class Series(Component):
     # constructors
 
     def __init__(self, app: dash.Dash, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
-        super().__init__(app, name, "series", id(self))
+        super().__init__(app, name)
         self.unit = unit
         self.series_type = series_type
-        self.values = values
+        self.values = values  # the dataframe should contain the columns specified when calling get_figure
 
+    # create the figure from the figure filed fount inside a chart field in the results json file
     @classmethod
-    def from_json(cls, app, series_json: dict):
+    def from_json(cls, app: dash.Dash, series_json: dict):
         logger = logging.getLogger(__name__)
         name = series_json["Name"]
 
@@ -55,16 +56,16 @@ class Series(Component):
     # properties
 
     @property
-    def draw_mode(self):
+    def draw_mode(self) -> str:
         type_to_draw_mode = {
             0: "lines",
             1: "markers"
         }
-        return type_to_draw_mode.get(self.series_type, "lines")
+        return type_to_draw_mode.get(self.series_type, "lines")  # the default drawing mode is lines
 
     # methods
 
-    def get_figure(self, x_column_name="x", y_column_name="y"):
+    def get_figure(self, x_column_name: str = "x", y_column_name: str = "y") -> go.Scatter:
 
         # TODO change the color selection to be more flexible
         # for now make buy things green and sell things red...

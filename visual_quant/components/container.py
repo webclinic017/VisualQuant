@@ -27,8 +27,8 @@ class Container(Component):
         )
 
         self.remove_button = dbc.Button(
-            html.I(className="far fa-minus-square fa-2x"),
-            style={"justify-self": "end", "color": "rgba(200, 200, 200, 255)"},
+            html.I(className="fas fa-trash fa-2x"),
+            style={"justify-self": "end", "color": "rgba(200, 200, 200, 255)", "padding": "20px 10px 0px 10px"},
             color="rgba(0, 0, 0, 0)",
             id={"type": "remove-container-button", "uid": id(self)}
         )
