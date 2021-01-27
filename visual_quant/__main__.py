@@ -19,9 +19,7 @@ if __name__ == "__main__":
     handler.setFormatter(format)
     logger.addHandler(handler)
 
-    container = Container(app, "Results", "col")
     page = Page(app, "Root Page")
-
     app.layout = page.get_html()
 
     app.title = "LEAN Results"
