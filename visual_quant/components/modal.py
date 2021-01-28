@@ -2,6 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import os
 import json
 
 from visual_quant.components.component import Component
@@ -49,7 +50,7 @@ class Modal(Component):
             id={"type": self.dropdown_type, "uid": self.parent.uid},
             options=self.get_options(),
             value=None,
-            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(200, 200, 200, 255)"},
+            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(40, 40, 40, 255)"},
             multi=True
         )
 
@@ -155,8 +156,12 @@ class SaveModal(Modal):
 
 class LoadModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: Component):
+    def __init__(self, app: dash.Dash, name: str, parent: Component, save_directory: str):
         super().__init__(app, name, "layout-load-modal", parent)
+
+        self.save_directory = save_directory
+        self.load_options()
+
         self.generate_html()
 
     def get_html(self):
@@ -173,3 +178,10 @@ class LoadModal(Modal):
         )
 
         return modal
+
+    def load_options(self):
+        for file_name in os.listdir(self.save_directory):
+            print(file_name)
+            if os.path.isfile(os.path.join(self.save_directory, file_name)):
+                print(file_name)
+                self.options.append(file_name)

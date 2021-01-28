@@ -58,6 +58,18 @@ class List(Component):
 
         return list_obj
 
+    # properties
+
+    @property
+    def json(self) -> dict:
+        json = {
+            "type": "list",
+            "name": self.name,
+            "direction": self.direction
+        }
+
+        return json
+
     # methods
 
     def add_entries(self, data: pd.DataFrame):

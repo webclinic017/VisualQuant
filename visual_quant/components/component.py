@@ -15,5 +15,10 @@ class Component:
     def get_html(self, *args, **kwargs):
         self.logger.error(f"class {type(self)} does not provide the methode get_html")
 
+    # return the json data to save to a layout file
+    @property
+    def json(self) -> dict:
+        return {}
+
     def __str__(self):
         return f"{self.name}-{type(self)}"

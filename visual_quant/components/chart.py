@@ -64,6 +64,16 @@ class Chart(Component):
 
     # properties
 
+    @property
+    def json(self) -> dict:
+        json = {
+            "type": "chart",
+            "series": list(self.series.keys()),
+            "name": self.name
+        }
+
+        return json
+
     # methods
 
     @staticmethod
@@ -108,13 +118,12 @@ class Chart(Component):
 
     def get_html(self):
 
-        drop_down = dcc.Dropdown(id={"name": self.name, "type": self.dropdown_type, "uid": self.uid}, options=self.get_options(),
+        drop_down = dcc.Dropdown(id={"type": self.dropdown_type, "uid": self.uid}, options=self.get_options(),
                                  value=list(self.series.keys()),
                                  multi=True,
-                                 className=f"dropdown {self.name}",
                                  style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
 
-        graph = dcc.Graph(id={"name": self.name, "type": self.graph_type, "uid": self.uid})
+        graph = dcc.Graph({"type": self.graph_type, "uid": self.uid})
 
         self.logger.debug(f"getting html for graph {self.name}")
 
@@ -125,5 +134,7 @@ class Chart(Component):
                     graph
                 ]
             ),
-            style={"padding": "10px", "min-width": "900px"}
+            style={"padding": "10px", "min-width": "900px"},
+            className=self.name,
+            id={"type": "chart", "uid": self.uid}
         )

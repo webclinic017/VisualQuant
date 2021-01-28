@@ -9,12 +9,13 @@ from visual_quant.components.modal import AddElementModal
 # hold a list of components and provide buttons to add further ones
 class Container(Component):
 
-    def __init__(self, app: dash.Dash, name: str, layout: str):
+    # constructors
+
+    def __init__(self, app: dash.Dash, name: str, layout: str, path: str):
         super().__init__(app, name)
 
         self.layout = layout
-        # decide when to make add buttons visible
-        self.show_buttons = False
+        self.path = f"{path}.{name}"
 
         self.layout_type_name = "container-layout"
         self.add_element_button_type = "open-add-element-modal-button"
@@ -37,13 +38,27 @@ class Container(Component):
             id={"type": self.remove_button_type, "uid": self.uid}
         )
 
+    # properties
+
+    @property
+    def json(self) -> dict:
+        json = {
+            "type": "container",
+            "name": self.name,
+            "layout": self.layout
+        }
+
+        return json
+
+    # methods
+
     # overwrite the get_html function
     def get_html(self):
         self.logger.debug(f"getting html for container {self.name}")
         if self.layout == "col":
-            html_obj = dbc.Col(self.html_list(), id={"type": "container-root", "uid": id(self)})
+            html_obj = dbc.Col(self.html_list(), id={"type": "container-root", "uid": self.uid})
         elif self.layout == "row":
-            html_obj = dbc.Row(self.html_list(), id={"type": "container-root", "uid": id(self)})
+            html_obj = dbc.Row(self.html_list(), id={"type": "container-root", "uid": self.uid})
         else:
             self.logger.error(f"container layout {self.layout} is not supported. Choose from row, col")
             return None
@@ -69,8 +84,10 @@ class Container(Component):
                         style={"display": "grid"}
                     )
                 ],
-                id={"type": self.layout_type_name, "uid": self.uid}
-            )
+                id={"type": self.layout_type_name, "uid": self.uid},
+            ),
+            # hold the path info in className here no not interferer with bootstrap classNames
+            html.Div(style={"display": "none"}, id={"type": "container-path", "uid": self.uid}, className=self.path)
         ]
 
         return layout_list
