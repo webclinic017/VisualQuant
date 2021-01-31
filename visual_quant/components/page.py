@@ -184,18 +184,22 @@ class Page(Component):
 
     # methods
 
+    def get_page_components(self, children):
+        components = [
+            html.Div([self.add_elements_modal.get_html(), self.load_modal.get_html(), self.save_modal.get_html()]),
+            self.navbar,
+            html.Div(
+                children=children,
+                id={"type": "page-layout", "uid": self.uid},
+                style={"display": "grid"}
+            ),
+            self.open_add_container_button
+        ]
+        return components
+
     def get_html(self):
         return html.Div(
-            [
-                html.Div([self.add_elements_modal.get_html(), self.load_modal.get_html(), self.save_modal.get_html()]),
-                self.navbar,
-                html.Div(
-                    children=[],
-                    id={"type": "page-layout", "uid": self.uid},
-                    style={"display": "grid"}
-                ),
-                self.open_add_container_button
-            ],
+            children=self.get_page_components([]),
             style={"display": "grid"},
             id={"type": self.type, "uid": self.uid}
         )
@@ -243,13 +247,21 @@ class Page(Component):
         loc = self.layout
         for p in path_list:
             loc = loc[p]
+            if loc["type"] == "container":
+                loc = loc["children"]
         return loc
 
-    def load_containers_from_dict(self, data: dict):
+    def load_from_save(self, data: dict):
         # TODO
+        result = {}
         for k in data.keys():
-            if data[k]["type"] == "container":
-                self.load_containers_from_dict(data[k])
+            ele_type = data[k]["type"]
+            if ele_type == "container":
+                result = self.load_from_save(data[k])
+            if ele_type == "list":
+                result =
+
+        return result
 
     # patten-matching-callbacks
 
@@ -262,9 +274,10 @@ class Page(Component):
         if self.is_clicked("add container close", n_close) and input_name is not None:
             # TODO make the layout direction changeable
             direction = "col"
-            children.insert(-1, Container(self.app, input_name, direction, "").get_html())
+            container = Container(self.app, input_name, direction, "")
+            children.insert(-1, container.get_html())
 
-            self.layout[input_name] = {"direction": direction, "type": "container"}
+            self.layout[input_name] = container.json
             return children, False
 
         return children, is_open
@@ -279,10 +292,9 @@ class Page(Component):
                 # the file exists, load the json
                 with open(os.path.join(self.layout_save_dir, file_name), "r") as f:
                     json_data = json.load(f)
+                    new_children = self.load_from_save(json_data)
 
-
-
-            return children, False
+            return self.get_page_components(new_children), False
 
         return children, is_open
 
@@ -341,6 +353,8 @@ class Page(Component):
                 children.insert(-1, container.get_html())
                 loc[input_value] = container.json
 
+            print(json.dumps(self.layout, indent=2))
+
             return children, False
 
         return children, is_open
@@ -354,12 +368,11 @@ class Page(Component):
         return fig
 
     def remove_container(self, n_clicks, style, path):
-        if n_clicks is None:
+        if n_clicks is not None:
             loc = self.layout_at(path)
             del loc
-            return style
-        else:
             return {"display": "none"}
+        return style
 
     def reset_page(self, n_clicks, children):
         if n_clicks is not None:

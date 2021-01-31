@@ -31,7 +31,7 @@ class Modal(Component):
         self.button = None
         self.dropdown = None
 
-    def generate_html(self):
+    def generate_html(self, multi_dropdown):
         self.input = dbc.Input(
             id={"type": self.input_type, "uid": self.parent.uid},
             placeholder="Container Name",
@@ -51,7 +51,7 @@ class Modal(Component):
             options=self.get_options(),
             value=None,
             style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(40, 40, 40, 255)"},
-            multi=True
+            multi=multi_dropdown
         )
 
     def load_options(self, *args) -> list:
@@ -84,7 +84,7 @@ class AddElementModal(Modal):
             self.data = json.load(f)
         self.load_options(self.data)
 
-        self.generate_html()
+        self.generate_html(True)
 
     def get_html(self):
         self.logger.debug(f"getting html for modal {self.name}, uid: {self.parent.uid}")
@@ -117,7 +117,7 @@ class AddContainerModal(Modal):
 
     def __init__(self, app: dash.Dash, name: str, parent: Component):
         super().__init__(app, name, "add-container-modal", parent)
-        self.generate_html()
+        self.generate_html(False)
 
     def get_html(self):
         self.logger.debug(f"getting html for modal {self.type}, uid: {self.parent.uid}")
@@ -138,7 +138,7 @@ class SaveModal(Modal):
 
     def __init__(self, app: dash.Dash, name: str, parent: Component):
         super().__init__(app, name, "layout-save-modal", parent)
-        self.generate_html()
+        self.generate_html(False)
 
     def get_html(self):
         modal = dbc.Modal([
@@ -162,7 +162,7 @@ class LoadModal(Modal):
         self.save_directory = save_directory
         self.load_options()
 
-        self.generate_html()
+        self.generate_html(False)
 
     def get_html(self):
         modal = dbc.Modal(

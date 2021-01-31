@@ -45,7 +45,8 @@ class Container(Component):
         json = {
             "type": "container",
             "name": self.name,
-            "layout": self.layout
+            "layout": self.layout,
+            "children": {}
         }
 
         return json
