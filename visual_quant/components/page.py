@@ -12,6 +12,7 @@ from visual_quant.components.modal import AddContainerModal, SaveModal, LoadModa
 from visual_quant.components.chart import Chart
 from visual_quant.components.list import List
 from visual_quant.components.series import Series
+from visual_quant.components.table import Table
 
 ICON_LINK = "https://camo.githubusercontent.com/1287ea52a264e20bf5ff3a0a31166fe03de778ee5f0a4d3dc9e88fb8340346c2/68747470733a2f2f63646e2e7175616e74636f6e6e6563742e636f6d2f7765622f692f32303138303630312d313631352d6c65616e2d6c6f676f2d736d616c6c2e706e67"
 
@@ -33,6 +34,7 @@ class Page(Component):
 
         self.layout = {}
 
+        # TODO configurable result file
         with open("data/results.json", "r") as f:
             self.data = json.load(f)
 
@@ -218,12 +220,10 @@ class Page(Component):
 
     # load list from json dict or list
     def load_list(self, name: str, path: str, data):
-        if type(data) == dict:
-            return List.from_dict(self.app, name, path, data)
-        elif type(data) == list:
-            return List.from_list(self.app, name, path, data)
-        else:
-            self.logger.error(f"data for list must be a dict or a list")
+        return List.from_json(self.app, name, path, data)
+
+    def load_table(self, name: str, path: str, data):
+        return Table.from_json(self.app, name, path, data)
 
     def is_clicked(self, name, n):
         if name not in self.clicks:
@@ -259,6 +259,8 @@ class Page(Component):
             ele = data[k]
             ele_type = ele["type"]
 
+            result_file_data = self.json_from_path(ele["path"])
+
             if ele_type == "container":
                 children = self.load_from_save(ele["children"], path)
                 container = Container(self.app, ele["name"], ele["direction"], path)
@@ -267,11 +269,12 @@ class Page(Component):
 
             elif ele_type == "list":
                 # load the list from save json
-                result_file_data = self.json_from_path(ele["path"])
                 result.append(List.from_save(self.app, ele, result_file_data).get_html())
 
+            elif ele_type == "table":
+                result.append(Table.from_save(self.app, ele, result_file_data).get_html())
+
             elif ele_type == "chart":
-                result_file_data = self.json_from_path(ele["path"])
                 # load the chart from saved json
                 result.append(Chart.from_save(self.app, ele, result_file_data).get_html())
 
@@ -388,7 +391,7 @@ class Page(Component):
 
     def remove_container(self, n_clicks, style, path):
         if n_clicks is not None:
-
+            # TODO better way to delete from layout dict
             path_list = list(filter(None, path.split(".")))
             loc = self.layout
             for p in path_list[:-1]:
