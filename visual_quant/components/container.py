@@ -11,11 +11,11 @@ class Container(Component):
 
     # constructors
 
-    def __init__(self, app: dash.Dash, name: str, layout: str, path: str):
-        super().__init__(app, name)
+    def __init__(self, app: dash.Dash, name: str, direction: str, path: str):
+        super().__init__(app, name, path)
 
-        self.layout = layout
-        self.path = f"{path}.{name}"
+        self.direction = direction
+        self.children = []
 
         self.layout_type_name = "container-layout"
         self.add_element_button_type = "open-add-element-modal-button"
@@ -45,7 +45,7 @@ class Container(Component):
         json = {
             "type": "container",
             "name": self.name,
-            "layout": self.layout,
+            "direction": self.direction,
             "children": {}
         }
 
@@ -56,12 +56,12 @@ class Container(Component):
     # overwrite the get_html function
     def get_html(self):
         self.logger.debug(f"getting html for container {self.name}")
-        if self.layout == "col":
+        if self.direction == "col":
             html_obj = dbc.Col(self.html_list(), id={"type": "container-root", "uid": self.uid})
-        elif self.layout == "row":
+        elif self.direction == "row":
             html_obj = dbc.Row(self.html_list(), id={"type": "container-root", "uid": self.uid})
         else:
-            self.logger.error(f"container layout {self.layout} is not supported. Choose from row, col")
+            self.logger.error(f"container direction {self.direction} is not supported. Choose from row, col")
             return None
 
         return html_obj
@@ -80,7 +80,7 @@ class Container(Component):
             dbc.Row(
                 children=[
                     dbc.Col(
-                        self.add_element_button,
+                        self.children + [self.add_element_button],
                         align="center",
                         style={"display": "grid"}
                     )

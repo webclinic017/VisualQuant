@@ -21,7 +21,7 @@ class Page(Component):
     app = None
 
     def __init__(self, app: dash.Dash, name: str):
-        super().__init__(app, name)
+        super().__init__(app, name, "")
 
         self.type = "page"
         self.app = app
@@ -206,7 +206,7 @@ class Page(Component):
 
     def json_from_path(self, path):
         data = self.data
-        print(path)
+
         for p in path.split("."):
             data = data[p]
         return data
@@ -217,11 +217,11 @@ class Page(Component):
         return Chart.from_json(self.app, data)
 
     # load list from json dict or list
-    def load_list(self, name: str, data):
+    def load_list(self, name: str, path: str, data):
         if type(data) == dict:
-            return List.from_dict(self.app, name, data)
+            return List.from_dict(self.app, name, path, data)
         elif type(data) == list:
-            return List.from_list(self.app, name, data)
+            return List.from_list(self.app, name, path, data)
         else:
             self.logger.error(f"data for list must be a dict or a list")
 
@@ -234,7 +234,8 @@ class Page(Component):
             return clicked
         return False
 
-    def get_id_from_ctx(self, ctx: dash.callback_context):
+    @ staticmethod
+    def get_id_from_ctx(ctx: dash.callback_context):
         origin_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
         if origin_id != "":
@@ -251,15 +252,28 @@ class Page(Component):
                 loc = loc["children"]
         return loc
 
-    def load_from_save(self, data: dict):
-        # TODO
-        result = {}
+    def load_from_save(self, data: dict, path: str) -> list:
+        # function only gets called on containers. build them and recursively add their children
+        result = []
         for k in data.keys():
-            ele_type = data[k]["type"]
+            ele = data[k]
+            ele_type = ele["type"]
+
             if ele_type == "container":
-                result = self.load_from_save(data[k])
-            if ele_type == "list":
-                result =
+                children = self.load_from_save(ele["children"], path)
+                container = Container(self.app, ele["name"], ele["direction"], path)
+                container.children = children
+                result.append(container.get_html())
+
+            elif ele_type == "list":
+                # load the list from save json
+                result_file_data = self.json_from_path(ele["path"])
+                result.append(List.from_save(self.app, ele, result_file_data).get_html())
+
+            elif ele_type == "chart":
+                result_file_data = self.json_from_path(ele["path"])
+                # load the chart from saved json
+                result.append(Chart.from_save(self.app, ele, result_file_data).get_html())
 
         return result
 
@@ -272,6 +286,9 @@ class Page(Component):
             return children, True
 
         if self.is_clicked("add container close", n_close) and input_name is not None:
+            if "." in input_name:
+                self.logger.error("container names can't container a '.'")
+                return children, is_open
             # TODO make the layout direction changeable
             direction = "col"
             container = Container(self.app, input_name, direction, "")
@@ -292,7 +309,8 @@ class Page(Component):
                 # the file exists, load the json
                 with open(os.path.join(self.layout_save_dir, file_name), "r") as f:
                     json_data = json.load(f)
-                    new_children = self.load_from_save(json_data)
+                    self.layout = json_data
+                    new_children = self.load_from_save(json_data, "")
 
             return self.get_page_components(new_children), False
 
@@ -301,18 +319,20 @@ class Page(Component):
     # callback
     def save_modal_handler(self, n_open, n_close, is_open, save_name: str):
         if self.is_clicked("open save", n_open):
-            return True
+            return not is_open
 
         elif self.is_clicked("close save", n_close):
             # create the output dir if it doesn't exist yet
             if not os.path.isdir(self.layout_save_dir):
                 os.mkdir(self.layout_save_dir)
+
             # save the layout to the file
             # if the name hasn't changed save to the same file
             save_name = save_name if type(save_name) is str else self.last_save_name
             self.last_save_name = save_name
+
             with open(os.path.join(self.layout_save_dir, save_name), "w") as f:
-                json.dump(self.layout, f)
+                json.dump(self.layout, f, indent=2)
             return False
 
         return is_open
@@ -325,7 +345,7 @@ class Page(Component):
             return children, is_open
 
         # TODO change hardcoded name
-        if n_open and origin_id["type"] == "open-add-element-modal-button":
+        if self.is_clicked(f"open-{origin_id['uid']}", n_open):
             # toggle open
             return children, True
 
@@ -336,14 +356,15 @@ class Page(Component):
             # add containers and elements
             if dropdown_values is not None:
                 for value in dropdown_values:
+                    path = value.split(".")
                     if value.split(".")[0] == "Charts":
-                        chart = self.load_chart(value, self.json_from_path(value))
+                        chart = self.load_chart(path[-1], self.json_from_path(value))
                         children.insert(-1, chart.get_html())
-                        loc[value] = chart.json
+                        loc[path[-1]] = chart.json
                     else:
-                        list_ele = self.load_list(value, self.json_from_path(value))
+                        list_ele = self.load_list(path[-1], ".".join(path[:-1]), self.json_from_path(value))
                         children.insert(-1, list_ele.get_html())
-                        loc[value] = list_ele.json
+                        loc[path[-1]] = list_ele.json
 
             if input_value is not None and not input_value == "":
 
@@ -352,8 +373,6 @@ class Page(Component):
                 # add the container before the button at the end
                 children.insert(-1, container.get_html())
                 loc[input_value] = container.json
-
-            print(json.dumps(self.layout, indent=2))
 
             return children, False
 
@@ -369,8 +388,14 @@ class Page(Component):
 
     def remove_container(self, n_clicks, style, path):
         if n_clicks is not None:
-            loc = self.layout_at(path)
-            del loc
+
+            path_list = list(filter(None, path.split(".")))
+            loc = self.layout
+            for p in path_list[:-1]:
+                loc = loc[p]
+                if loc["type"] == "container":
+                    loc = loc["children"]
+            del loc[path_list[-1]]
             return {"display": "none"}
         return style
 

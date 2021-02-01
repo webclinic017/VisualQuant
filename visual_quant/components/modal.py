@@ -12,14 +12,12 @@ from visual_quant.components.component import Component
 class Modal(Component):
 
     def __init__(self, app: dash.Dash, name: str, c_type: str, parent: "Component"):
-        super().__init__(app, parent.name)
+        super().__init__(app, parent.name, parent.path)
 
         self.name = name
         self.type = c_type
         self.parent = parent
         self.id = {"type": self.type, "uid": self.parent.uid}
-
-        print(f"creating modal {self.name} with type {self.type} and uid {self.parent.uid}")
 
         self.button_type = f"{c_type}-button"
         self.input_type = f"{c_type}-input"
@@ -112,6 +110,13 @@ class AddElementModal(Modal):
         for list in data["TotalPerformance"]:
             self.options.append(f"TotalPerformance.{list}")
 
+    def get_options(self):
+        result = []
+        for opt in self.options:
+            # only show last name of path as name
+            result.append({"label": opt.split(".")[-1], "value": str(opt)})
+        return result
+
 
 class AddContainerModal(Modal):
 
@@ -181,7 +186,5 @@ class LoadModal(Modal):
 
     def load_options(self):
         for file_name in os.listdir(self.save_directory):
-            print(file_name)
             if os.path.isfile(os.path.join(self.save_directory, file_name)):
-                print(file_name)
                 self.options.append(file_name)

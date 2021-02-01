@@ -17,7 +17,8 @@ class Chart(Component):
     # constructors
 
     def __init__(self, app, name):
-        super().__init__(app, name)
+        # the path is always "Charts" from the json file
+        super().__init__(app, name, "Charts")
         self.series = {}
 
         self.dropdown_type = "chart-dropdown"
@@ -53,6 +54,10 @@ class Chart(Component):
 
         return cls.from_series(app, name, series)
 
+    @classmethod
+    def from_save(cls, app: dash.Dash, save_json: dict, result_file_data: dict):
+        return cls.from_json(app, result_file_data)
+
     # magic
 
     def __str__(self):
@@ -69,7 +74,8 @@ class Chart(Component):
         json = {
             "type": "chart",
             "series": list(self.series.keys()),
-            "name": self.name
+            "name": self.name,
+            "path": self.path
         }
 
         return json

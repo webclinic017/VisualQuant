@@ -13,9 +13,8 @@ class List(Component):
 
     # constructors
 
-    def __init__(self, app: dash.Dash, name: str, direction: str = "vertical", alignment="left", font_size=17,
-                 font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
-        super().__init__(app, name)
+    def __init__(self, app: dash.Dash, name: str, path: str, direction: str = "vertical", alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
+        super().__init__(app, name, path)
         self.entries = pd.DataFrame()
 
         # TODO base color on theme directly
@@ -26,9 +25,9 @@ class List(Component):
         self.fill_color = fill_color
 
     @classmethod
-    def from_dict(cls, app: dash.Dash, name: str, data: dict):
+    def from_dict(cls, app: dash.Dash, name: str, path: str, data: dict):
         # create a list with only 2 columns from a dict
-        list_obj = cls(app, name, direction="vertical")
+        list_obj = cls(app, name, path, direction="vertical")
         list_obj.logger.debug(f"loading list {name} from dict")
 
         # reset index to column because the datatable does not use the index
@@ -37,9 +36,9 @@ class List(Component):
         return list_obj
 
     @classmethod
-    def from_list(cls, app: dash.Dash, name: str, data: list, collapse: dict = None):
+    def from_list(cls, app: dash.Dash, name: str, path: str, data: list, collapse: dict = None):
         # horizontal dict with n columns from list
-        list_obj = cls(app, name, direction="horizontal")
+        list_obj = cls(app, name, path, direction="horizontal")
         list_obj.logger.debug(f"loading list {name} from list")
 
         # if there are entries that a dicts themselves like the Symbol field
@@ -58,6 +57,18 @@ class List(Component):
 
         return list_obj
 
+    @classmethod
+    def from_save(cls, app: dash.Dash, save_json: dict, result_file_data):
+        constructor = None
+        if save_json["direction"] == "horizontal":
+            constructor = cls.from_list
+        elif save_json["direction"] == "vertical":
+            constructor = cls.from_dict
+        else:
+            raise TypeError
+
+        return constructor(app, save_json["name"], save_json["path"], result_file_data)
+
     # properties
 
     @property
@@ -65,6 +76,7 @@ class List(Component):
         json = {
             "type": "list",
             "name": self.name,
+            "path": self.path,
             "direction": self.direction
         }
 
