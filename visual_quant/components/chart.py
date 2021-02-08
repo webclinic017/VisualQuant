@@ -10,6 +10,12 @@ from visual_quant.components.series import Series
 from visual_quant.components.component import Component
 
 
+# callback names
+CHART_DROPDOWN = "chart-dropdown"
+CHART_GRAPH = "chart-graph"
+CHART_TYPE = "chart"
+
+
 # provides a interactive chart using the dash graph and dropdown
 # can hold multiple series
 class Chart(Component):
@@ -21,8 +27,8 @@ class Chart(Component):
         super().__init__(app, name, "Charts")
         self.series = {}
 
-        self.dropdown_type = "chart-dropdown"
-        self.graph_type = "chart-graph"
+        self.dropdown_type = CHART_DROPDOWN
+        self.graph_type = CHART_GRAPH
 
     # constructor for directly adding series to the chart
     @classmethod
@@ -55,7 +61,7 @@ class Chart(Component):
         return cls.from_series(app, name, series)
 
     @classmethod
-    def from_save(cls, app: dash.Dash, save_json: dict, result_file_data: dict):
+    def from_save_file(cls, app: dash.Dash, save_json: dict, result_file_data: dict):
         return cls.from_json(app, result_file_data)
 
     # magic
@@ -124,7 +130,8 @@ class Chart(Component):
 
     def get_html(self):
 
-        drop_down = dcc.Dropdown(id={"type": self.dropdown_type, "uid": self.uid}, options=self.get_options(),
+        drop_down = dcc.Dropdown(id={"type": self.dropdown_type, "uid": self.uid},
+                                 options=self.get_options(),
                                  value=list(self.series.keys()),
                                  multi=True,
                                  style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
@@ -142,5 +149,5 @@ class Chart(Component):
             ),
             style={"padding": "10px", "min-width": "900px"},
             className=self.name,
-            id={"type": "chart", "uid": self.uid}
+            id={"type": CHART_TYPE, "uid": self.uid}
         )

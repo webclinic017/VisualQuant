@@ -19,7 +19,9 @@ class Component:
     # return the json data to save to a layout file
     @property
     def json(self) -> dict:
-        return {}
+        return {
+            "name": self.name
+        }
 
     def __str__(self):
         return f"{self.name}-{type(self)}"

@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output, State, MATCH, ALL
 from visual_quant.components.component import Component
 from visual_quant.components.container import Container
 from visual_quant.components.modal import AddContainerModal, SaveModal, LoadModal
-from visual_quant.components.chart import Chart
+import visual_quant.components.chart as chart
 from visual_quant.components.list import List
 from visual_quant.components.series import Series
 from visual_quant.components.table import Table
@@ -216,7 +216,7 @@ class Page(Component):
     # load chart from json dict
     def load_chart(self, name: str, data: dict):
         self.logger.debug(f"loading chart {name}")
-        return Chart.from_json(self.app, data)
+        return chart.Chart.from_json(self.app, data)
 
     # load list from json dict or list
     def load_list(self, name: str, path: str, data):
@@ -259,7 +259,7 @@ class Page(Component):
             ele = data[k]
             ele_type = ele["type"]
 
-            result_file_data = self.json_from_path(ele["path"])
+
 
             if ele_type == "container":
                 children = self.load_from_save(ele["children"], path)
@@ -269,14 +269,17 @@ class Page(Component):
 
             elif ele_type == "list":
                 # load the list from save json
+                result_file_data = self.json_from_path(ele["path"])
                 result.append(List.from_save(self.app, ele, result_file_data).get_html())
 
             elif ele_type == "table":
+                result_file_data = self.json_from_path(ele["path"])
                 result.append(Table.from_save(self.app, ele, result_file_data).get_html())
 
             elif ele_type == "chart":
                 # load the chart from saved json
-                result.append(Chart.from_save(self.app, ele, result_file_data).get_html())
+                result_file_data = self.json_from_path(ele["path"])
+                result.append(chart.Chart.from_save_file(self.app, ele, result_file_data).get_html())
 
         return result
 
@@ -361,9 +364,9 @@ class Page(Component):
                 for value in dropdown_values:
                     path = value.split(".")
                     if value.split(".")[0] == "Charts":
-                        chart = self.load_chart(path[-1], self.json_from_path(value))
-                        children.insert(-1, chart.get_html())
-                        loc[path[-1]] = chart.json
+                        chart_ele = self.load_chart(path[-1], self.json_from_path(value))
+                        children.insert(-1, chart_ele.get_html())
+                        loc[path[-1]] = chart_ele.json
                     else:
                         list_ele = self.load_list(path[-1], ".".join(path[:-1]), self.json_from_path(value))
                         children.insert(-1, list_ele.get_html())
@@ -390,8 +393,10 @@ class Page(Component):
         return fig
 
     def remove_container(self, n_clicks, style, path):
-        if n_clicks is not None:
+        # TODO fix container only being removed after 2 click
+        if self.is_clicked(f"remove {path}", n_clicks):
             # TODO better way to delete from layout dict
+            print(f"remove container path: {path}")
             path_list = list(filter(None, path.split(".")))
             loc = self.layout
             for p in path_list[:-1]:
