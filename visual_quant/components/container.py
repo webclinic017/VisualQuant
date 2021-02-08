@@ -10,7 +10,7 @@ from visual_quant.components.modal import ContainerModal
 class Container(Component):
 
     def __init__(self, app: dash.Dash, name: str, layout: str):
-        super().__init__(app, name, "container-layout", id(self))
+        super().__init__(app, name)
 
         self.layout = layout
         # decide when to make add buttons visible

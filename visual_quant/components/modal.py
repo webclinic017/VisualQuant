@@ -64,10 +64,10 @@ class Modal(Component):
         return modal
 
 
-class ContainerModal(Modal):
+class AddElementModal(Modal):
 
     def __init__(self, app: dash.Dash, name: str, parent: Component):
-        super().__init__(app, name, "container-modal", parent)
+        super().__init__(app, name, "add-element-modal", parent)
 
         with open("data/results.json", "r") as f:
             self.data = json.load(f)
