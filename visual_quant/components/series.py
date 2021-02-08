@@ -27,7 +27,8 @@ class Series(Component):
     # constructors
 
     def __init__(self, app: dash.Dash, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
-        super().__init__(app, name)
+        # TODO create the path
+        super().__init__(app, name, "")
         self.unit = unit
         self.series_type = series_type
         self.values = values  # the dataframe should contain the columns specified when calling get_figure

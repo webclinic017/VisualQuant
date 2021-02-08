@@ -3,45 +3,65 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 from visual_quant.components.component import Component
-from visual_quant.components.modal import ContainerModal
+from visual_quant.components.modal import AddElementModal
 
 
 # hold a list of components and provide buttons to add further ones
 class Container(Component):
 
-    def __init__(self, app: dash.Dash, name: str, layout: str):
-        super().__init__(app, name)
+    # constructors
 
-        self.layout = layout
-        # decide when to make add buttons visible
-        self.show_buttons = False
+    def __init__(self, app: dash.Dash, name: str, direction: str, path: str):
+        super().__init__(app, name, path)
+
+        self.direction = direction
+        self.children = []
+
+        self.layout_type_name = "container-layout"
+        self.add_element_button_type = "open-add-element-modal-button"
+        self.remove_button_type = "remove-container-button"
 
         # generate components
-        self.modal = ContainerModal(app, self)
+        self.modal = AddElementModal(app, f"container-{self.name}-modal", self)
 
         self.add_element_button = dbc.Button(
             html.I(className="fas fa-plus fa-2x"),
             style={"color": "rgba(200, 200, 200, 255)", "backgroundColor": "rgba(0, 0, 0, 0)", "justify-self": "center"},
             outline=True,
-            id={"type": "open-container-modal-button", "uid": id(self)}
+            id={"type": self.add_element_button_type, "uid": self.uid}
         )
 
         self.remove_button = dbc.Button(
             html.I(className="fas fa-trash fa-2x"),
             style={"justify-self": "end", "color": "rgba(200, 200, 200, 255)", "padding": "20px 10px 0px 10px"},
             color="rgba(0, 0, 0, 0)",
-            id={"type": "remove-container-button", "uid": id(self)}
+            id={"type": self.remove_button_type, "uid": self.uid}
         )
+
+    # properties
+
+    @property
+    def json(self) -> dict:
+        json = {
+            "type": "container",
+            "name": self.name,
+            "direction": self.direction,
+            "children": {}
+        }
+
+        return json
+
+    # methods
 
     # overwrite the get_html function
     def get_html(self):
         self.logger.debug(f"getting html for container {self.name}")
-        if self.layout == "col":
-            html_obj = dbc.Col(self.html_list(), id={"type": "container-root", "uid": id(self)})
-        elif self.layout == "row":
-            html_obj = dbc.Row(self.html_list(), id={"type": "container-root", "uid": id(self)})
+        if self.direction == "col":
+            html_obj = dbc.Col(self.html_list(), id={"type": "container-root", "uid": self.uid})
+        elif self.direction == "row":
+            html_obj = dbc.Row(self.html_list(), id={"type": "container-root", "uid": self.uid})
         else:
-            self.logger.error(f"container layout {self.layout} is not supported. Choose from row, col")
+            self.logger.error(f"container direction {self.direction} is not supported. Choose from row, col")
             return None
 
         return html_obj
@@ -60,13 +80,15 @@ class Container(Component):
             dbc.Row(
                 children=[
                     dbc.Col(
-                        self.add_element_button,
+                        self.children + [self.add_element_button],
                         align="center",
                         style={"display": "grid"}
                     )
                 ],
-                id=self.id
+                id={"type": self.layout_type_name, "uid": self.uid},
             ),
+            # hold the path info in className here no not interferer with bootstrap classNames
+            html.Div(style={"display": "none"}, id={"type": "container-path", "uid": self.uid}, className=self.path)
         ]
 
         return layout_list

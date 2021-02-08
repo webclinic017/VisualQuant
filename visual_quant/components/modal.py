@@ -2,6 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import os
 import json
 
 from visual_quant.components.component import Component
@@ -11,21 +12,26 @@ from visual_quant.components.component import Component
 class Modal(Component):
 
     def __init__(self, app: dash.Dash, name: str, c_type: str, parent: "Component"):
-        super().__init__(app, parent.name)
+        super().__init__(app, parent.name, parent.path)
 
         self.name = name
         self.type = c_type
         self.parent = parent
+        self.id = {"type": self.type, "uid": self.parent.uid}
 
-        self.button_type = f"{c_type}-modal-button"
-        self.input_type = f"{c_type}-modal-input"
-        self.dropdown_type = f"{c_type}-modal-dropdown"
+        self.button_type = f"{c_type}-button"
+        self.input_type = f"{c_type}-input"
+        self.dropdown_type = f"{c_type}-dropdown"
 
         self.options = []
-        self.load_options()
 
+        self.input = None
+        self.button = None
+        self.dropdown = None
+
+    def generate_html(self, multi_dropdown):
         self.input = dbc.Input(
-            id={"name": name, "type": self.input_type, "uid": parent.uid},
+            id={"type": self.input_type, "uid": self.parent.uid},
             placeholder="Container Name",
             type="text",
             style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(200, 200, 200, 255)"}
@@ -33,24 +39,27 @@ class Modal(Component):
 
         self.button = dbc.Button(
             html.I(className="fas fa-plus fa-2x"),
-            id={"name": name, "type": self.button_type, "uid": parent.uid},
+            id={"type": self.button_type, "uid": self.parent.uid},
             color="success",
             style={"display": "grid", "justify-self": "end"}
         )
 
         self.dropdown = dcc.Dropdown(
-            id={"name": name, "type": self.dropdown_type, "uid": parent.uid},
+            id={"type": self.dropdown_type, "uid": self.parent.uid},
             options=self.get_options(),
             value=None,
-            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(200, 200, 200, 255)"},
-            multi=True
+            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(40, 40, 40, 255)"},
+            multi=multi_dropdown
         )
 
-    def load_options(self) -> list:
+    def load_options(self, *args) -> list:
         return []
 
     def get_options(self):
-        return self.options
+        result = []
+        for opt in self.options:
+            result.append({"label": str(opt), "value": str(opt)})
+        return result
 
     # default empty modal
     def get_html(self):
@@ -73,8 +82,10 @@ class AddElementModal(Modal):
             self.data = json.load(f)
         self.load_options(self.data)
 
+        self.generate_html(True)
+
     def get_html(self):
-        self.logger.debug(f"getting html for modal {self.name}")
+        self.logger.debug(f"getting html for modal {self.name}, uid: {self.parent.uid}")
         modal = dbc.Modal([
             dbc.ModalHeader(html.H3(f"Add Elements to {self.name}")),
             dbc.ModalBody([
@@ -86,7 +97,7 @@ class AddElementModal(Modal):
                 html.Div([self.input, self.button], style={"display": "grid", "gap": "10px"})
             ])
         ],
-            id={"name": self.name, "type": self.type, "uid": self.parent.uid},
+            id=self.id,
             is_open=False
         )
 
@@ -102,17 +113,19 @@ class AddElementModal(Modal):
     def get_options(self):
         result = []
         for opt in self.options:
-            result.append({"label": str(opt), "value": str(opt)})
+            # only show last name of path as name
+            result.append({"label": opt.split(".")[-1], "value": str(opt)})
         return result
 
 
-class PageModal(Modal):
+class AddContainerModal(Modal):
 
-    def __init__(self, app: dash.Dash, parent: Component):
-        super().__init__(app, "page-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: Component):
+        super().__init__(app, name, "add-container-modal", parent)
+        self.generate_html(False)
 
     def get_html(self):
-        self.logger.debug(f"getting html for modal {self.name}")
+        self.logger.debug(f"getting html for modal {self.type}, uid: {self.parent.uid}")
         modal = dbc.Modal([
             dbc.ModalHeader(html.H3(f"Add Container")),
             dbc.ModalBody([
@@ -120,8 +133,7 @@ class PageModal(Modal):
                 html.Div([self.input, self.button], style={"display": "grid", "gap": "10px"})
             ])
         ],
-            id=self.id,
-            is_open=False
+            id=self.id
         )
 
         return modal
@@ -129,20 +141,50 @@ class PageModal(Modal):
 
 class SaveModal(Modal):
 
-    def __init__(self, app: dash.Dash, parent: Component):
-        super().__init__(app, "layout-save-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: Component):
+        super().__init__(app, name, "layout-save-modal", parent)
+        self.generate_html(False)
 
     def get_html(self):
-
         modal = dbc.Modal([
-                dbc.ModalHeader(html.H3(f"Save layout")),
-                dbc.ModalBody([
-                    html.H5("Save a layout"),
-                    html.Div([self.input, self.button], style={"display": "grid", "gap": "10px"})
-                ])
-            ],
-                id=self.id,
-                is_open=False
-            )
+            dbc.ModalHeader(html.H3(f"Save layout")),
+            dbc.ModalBody([
+                html.H5("Save a layout"),
+                html.Div([self.input, self.button], style={"display": "grid", "gap": "10px"})
+            ])
+        ],
+            id=self.id
+        )
 
         return modal
+
+
+class LoadModal(Modal):
+
+    def __init__(self, app: dash.Dash, name: str, parent: Component, save_directory: str):
+        super().__init__(app, name, "layout-load-modal", parent)
+
+        self.save_directory = save_directory
+        self.load_options()
+
+        self.generate_html(False)
+
+    def get_html(self):
+        modal = dbc.Modal(
+            [
+                dbc.ModalHeader(html.H3(f"Load layout")),
+                dbc.ModalBody(
+                    [
+                        html.Div([self.dropdown, self.button], style={"display": "grid", "gap": "10px"})
+                    ]
+                )
+            ],
+            id=self.id
+        )
+
+        return modal
+
+    def load_options(self):
+        for file_name in os.listdir(self.save_directory):
+            if os.path.isfile(os.path.join(self.save_directory, file_name)):
+                self.options.append(file_name)
