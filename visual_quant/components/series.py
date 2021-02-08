@@ -45,7 +45,10 @@ class Series(Component):
             logger.error(f"no values found for series {name}. A series should contain a values field\n{e}")
             return None
 
-        df["x"] = pd.to_datetime(df["x"], unit="s")
+        try:
+            df["x"] = pd.to_datetime(df["x"], unit="s")
+        except KeyError as e:
+            logger.error(f"column x not found in the dataframe. columns are {df.columns}. {e}")
 
         return cls(app, name, to_unit[series_json["Unit"]], series_json["SeriesType"], df)
 
