@@ -1,43 +1,36 @@
 import logging
 import dash_core_components as dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State, MATCH
 import plotly.graph_objects as go
 import dash
 import dash_bootstrap_components as dbc
-import dash_html_components as html
 
 import visual_quant.web_components.series as series
-from visual_quant.web_components.component import Component
-
+import visual_quant.web_components.component as component
+import visual_quant.data.config_loader as cfg
 
 # callback names
 CHART_DROPDOWN = "chart-dropdown"
 CHART_GRAPH = "chart-graph"
 CHART_NAME = "chart-name"
 
+
 # provides a interactive chart using the dash graph and dropdown
 # can hold multiple series
-class Chart(Component):
+class Chart(component.Component):
 
     # constructors
 
-    def __init__(self, app, name):
+    def __init__(self, name):
         # the path is always "Charts" from the json file
-        super().__init__(app, name, "Charts")
+        super().__init__(name, "Charts")
         self.series = {}
 
-        # graph callbacks
-
-        app.callback(
-            Output({"type": CHART_GRAPH, "uid": MATCH}, "figure"),  # charts figure
-            Input({"type":.CHART_DROPDOWN, "uid": MATCH}, "value"),  # charts selected series
-            State({"type": CHART_NAME, "uid": MATCH}, "className")  # chart name
-        )(self.graph_dropdown)
 
     # constructor for directly adding series to the chart
     @classmethod
-    def from_series(cls, app: dash.Dash, name: str, series: list):
-        obj = cls(app, name)
+    def from_series(cls, name: str, series: list):
+        obj = cls(name)
         for s in series:
             obj.add_series(s)
 
@@ -45,7 +38,7 @@ class Chart(Component):
 
     # load the chart from a json dict
     @classmethod
-    def from_json(cls, app: dash.Dash, chart_json: dict):
+    def from_json(cls, chart_json: dict):
         logger = logging.getLogger(__name__)
 
         try:
@@ -56,17 +49,17 @@ class Chart(Component):
             return None
 
         # add the all series in the chart
-        series = []
+        new_series = []
         for s in series_json:
             s = series_json[s]
-            if Series.from_json(app, s) is not None:
-                series.append(Series.from_json(app, s))
+            if series.Series.from_json(s) is not None:
+                new_series.append(series.Series.from_json(s))
 
-        return cls.from_series(app, name, series)
+        return cls.from_series(name, new_series)
 
     @classmethod
-    def from_save_file(cls, app: dash.Dash, save_json: dict, result_file_data: dict):
-        return cls.from_json(app, result_file_data)
+    def from_save_file(cls, save_json: dict, result_file_data: dict):
+        return cls.from_json(result_file_data)
 
     # magic
 
@@ -110,7 +103,8 @@ class Chart(Component):
         if values is not None:
             for series_name in values:
                 # TODO use the json_loader
-                s = series.Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])
+                json = cfg.result_file_json()
+                s = series.Series.from_json(json["Charts"][chart_name]["Series"][series_name])
                 fig.add_trace(s.get_figure())
         return fig
 

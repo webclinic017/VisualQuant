@@ -13,6 +13,7 @@ import visual_quant.web_components.chart as chart
 import visual_quant.web_components.list as dash_list
 import visual_quant.web_components.series as series
 import visual_quant.web_components.table as table
+import visual_quant.data.config_loader as cfg
 
 ICON_LINK = "https://camo.githubusercontent.com/1287ea52a264e20bf5ff3a0a31166fe03de778ee5f0a4d3dc9e88fb8340346c2/68747470733a2f2f63646e2e7175616e74636f6e6e6563742e636f6d2f7765622f692f32303138303630312d313631352d6c65616e2d6c6f676f2d736d616c6c2e706e67"
 
@@ -28,7 +29,7 @@ class Page(component.Component):
     app = None
 
     def __init__(self, app: dash.Dash, name: str):
-        super().__init__(app, name, "")
+        super().__init__(name, "")
 
         self.type = "page"
         self.app = app
@@ -40,9 +41,7 @@ class Page(component.Component):
 
         self.layout = {}
 
-        # TODO configurable result file
-        with open(result_file, "r") as f:
-            self.data = json.load(f)
+        self.data = cfg.result_file_json()
 
         # html elements
 
@@ -215,7 +214,7 @@ class Page(component.Component):
     # load chart from json dict
     def load_chart(self, name: str, data: dict):
         self.logger.debug(f"loading chart {name}")
-        return chart.Chart.from_json(self.app, data)
+        return chart.Chart.from_json(data)
 
     # load list from json dict or list
     def load_list(self, name: str, path: str, data):
@@ -260,7 +259,7 @@ class Page(component.Component):
 
             if ele_type == "container":
                 children = self.load_from_save(ele["children"], path)
-                container_element = container.Container(self.app, ele["name"], ele["direction"], path)
+                container_element = container.Container(ele["name"], ele["direction"], path)
                 container_element.children = children
                 result.append(container_element.get_html())
 
@@ -276,7 +275,7 @@ class Page(component.Component):
             elif ele_type == "chart":
                 # load the chart from saved json
                 result_file_data = self.json_from_path(ele["path"])
-                result.append(chart.Chart.from_save_file(self.app, ele, result_file_data).get_html())
+                result.append(chart.Chart.from_save_file(ele, result_file_data).get_html())
 
         return result
 
@@ -308,7 +307,7 @@ class Page(component.Component):
 
                 # TODO make the layout direction changeable
                 direction = "col"
-                container_element = container.Container(self.app, input_name, direction, "")
+                container_element = container.Container(input_name, direction, "")
                 children.insert(-1, container_element.get_html())
 
                 self.layout[input_name] = container_element.json
@@ -386,7 +385,7 @@ class Page(component.Component):
 
                 if input_value not in loc:
                     direction = "col"
-                    container_element = container.Container(self.app, input_value, direction, path)
+                    container_element = container.Container(input_value, direction, path)
                     # add the container before the button at the end
                     children.insert(-1, container_element.get_html())
                     loc[input_value] = container_element.json

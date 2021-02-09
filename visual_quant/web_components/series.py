@@ -26,16 +26,16 @@ class Series(Component):
 
     # constructors
 
-    def __init__(self, app: dash.Dash, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
+    def __init__(self, name: str, unit: UnitType, series_type: int, values: pd.DataFrame):
         # TODO create the path
-        super().__init__(app, name, "")
+        super().__init__(name, "")
         self.unit = unit
         self.series_type = series_type
         self.values = values  # the dataframe should contain the columns specified when calling get_figure
 
     # create the figure from the figure filed fount inside a chart field in the results json file
     @classmethod
-    def from_json(cls, app: dash.Dash, series_json: dict):
+    def from_json(cls, series_json: dict):
         logger = logging.getLogger(__name__)
         name = series_json["Name"]
 
@@ -50,7 +50,7 @@ class Series(Component):
         except KeyError as e:
             logger.error(f"column x not found in the dataframe. columns are {df.columns}. {e}")
 
-        return cls(app, name, to_unit[series_json["Unit"]], series_json["SeriesType"], df)
+        return cls(name, to_unit[series_json["Unit"]], series_json["SeriesType"], df)
 
     # magic
 

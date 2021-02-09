@@ -1,13 +1,10 @@
-import dash
-import dash_html_components as html
 import logging
 
 
 # super class for all components
 class Component:
 
-    def __init__(self, app: dash.Dash, name: str, path: str):
-        self.app = app
+    def __init__(self, name: str, path: str):
         self.name = name
         self.path = f"{path}.{name}"
         self.uid = str(id(self))

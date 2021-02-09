@@ -6,6 +6,7 @@ import os
 import json
 
 import visual_quant.web_components.component as component
+import visual_quant.data.config_loader as cfg
 
 
 MODAL_BUTTON = "modal-button"
@@ -21,8 +22,8 @@ MODAL_LOAD_LAYOUT = "layout-load-modal"
 # dialog for selecting elements to load opened by the add buttons
 class Modal(component.Component):
 
-    def __init__(self, app: dash.Dash, name: str, c_type: str, parent: component.Component):
-        super().__init__(app, parent.name, parent.path)
+    def __init__(self, name: str, c_type: str, parent: component.Component):
+        super().__init__(parent.name, parent.path)
 
         self.name = name
         self.type = c_type
@@ -81,11 +82,10 @@ class Modal(component.Component):
 
 class AddElementModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
-        super().__init__(app, name, MODAL_ADD_ELEMENT, parent)
+    def __init__(self, name: str, parent: component.Component):
+        super().__init__(name, MODAL_ADD_ELEMENT, parent)
 
-        with open(result_file, "r") as f:
-            self.data = json.load(f)
+        self.data = cfg.result_file_json()
         self.load_options(self.data)
 
         self.generate_html(True)
@@ -126,8 +126,8 @@ class AddElementModal(Modal):
 
 class AddContainerModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
-        super().__init__(app, name, MODAL_ADD_CONTAINER, parent)
+    def __init__(self, name: str, parent: component.Component):
+        super().__init__(name, MODAL_ADD_CONTAINER, parent)
         self.generate_html(False)
 
     def get_html(self):
@@ -147,8 +147,8 @@ class AddContainerModal(Modal):
 
 class SaveModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
-        super().__init__(app, name, MODAL_SAVE_LAYOUT, parent)
+    def __init__(self, name: str, parent: component.Component):
+        super().__init__(name, MODAL_SAVE_LAYOUT, parent)
         self.generate_html(False)
 
     def get_html(self):
@@ -167,8 +167,8 @@ class SaveModal(Modal):
 
 class LoadModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: component.Component, save_directory: str):
-        super().__init__(app, name, MODAL_LOAD_LAYOUT, parent)
+    def __init__(self, name: str, parent: component.Component, save_directory: str):
+        super().__init__(name, MODAL_LOAD_LAYOUT, parent)
 
         self.save_directory = save_directory
         self.load_options()

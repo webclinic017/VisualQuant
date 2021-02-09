@@ -18,14 +18,14 @@ class Container(Component):
 
     # constructors
 
-    def __init__(self, app: dash.Dash, name: str, direction: str, path: str):
-        super().__init__(app, name, path)
+    def __init__(self, name: str, direction: str, path: str):
+        super().__init__(name, path)
 
         self.direction = direction
         self.children = []
 
         # generate components
-        self.modal = AddElementModal(app, f"container-{self.name}-modal", self)
+        self.modal = AddElementModal(f"container-{self.name}-modal", self)
 
         self.add_element_button = dbc.Button(
             html.I(className="fas fa-plus fa-2x"),
