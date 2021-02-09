@@ -385,7 +385,7 @@ class Page(Component):
         return children, is_open
 
     def graph_dropdown(self, values: list, chart_name: str):
-        fig = go.Figure(layout=Chart.layout(chart_name))
+        fig = go.Figure(layout=chart.Chart.layout(chart_name))
         if values is not None:
             for series_name in values:
                 s = Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])

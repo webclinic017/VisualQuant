@@ -8,8 +8,8 @@ from visual_quant.components.page import Page
 
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
 
-if __name__ == "__main__":
 
+def run():
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, FONT_AWESOME])
 
     logger = logging.getLogger("visual_quant")
@@ -25,3 +25,7 @@ if __name__ == "__main__":
 
     app.title = "LEAN Results"
     app.run_server(debug=True, dev_tools_props_check=False)
+
+
+if __name__ == "__main__":
+    run()
