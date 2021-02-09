@@ -13,7 +13,7 @@ from visual_quant.components.component import Component
 # callback names
 CHART_DROPDOWN = "chart-dropdown"
 CHART_GRAPH = "chart-graph"
-CHART_TYPE = "chart"
+CHART_NAME = "chart-name"
 
 
 # provides a interactive chart using the dash graph and dropdown
@@ -149,5 +149,5 @@ class Chart(Component):
             ),
             style={"padding": "10px", "min-width": "900px"},
             className=self.name,
-            id={"type": CHART_TYPE, "uid": self.uid}
+            id={"type": CHART_NAME, "uid": self.uid}
         )

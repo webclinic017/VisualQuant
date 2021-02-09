@@ -5,23 +5,29 @@ import dash_html_components as html
 import os
 import json
 
-from visual_quant.components.component import Component
+import visual_quant.components.component as component
+
+
+MODAL_BUTTON = "modal-button"
+MODAL_INPUT = "modal-input"
+MODAL_DROPDOWN = "modal-dropdown"
+
+MODAL_ADD_ELEMENT = "add-element-modal"
+MODAL_ADD_CONTAINER = "add-container-modal"
+MODAL_SAVE_LAYOUT = "layout-save-modal"
+MODAL_LOAD_LAYOUT = "layout-load-modal"
 
 
 # dialog for selecting elements to load opened by the add buttons
-class Modal(Component):
+class Modal(component.Component):
 
-    def __init__(self, app: dash.Dash, name: str, c_type: str, parent: "Component"):
+    def __init__(self, app: dash.Dash, name: str, c_type: str, parent: component.Component):
         super().__init__(app, parent.name, parent.path)
 
         self.name = name
         self.type = c_type
         self.parent = parent
         self.id = {"type": self.type, "uid": self.parent.uid}
-
-        self.button_type = f"{c_type}-button"
-        self.input_type = f"{c_type}-input"
-        self.dropdown_type = f"{c_type}-dropdown"
 
         self.options = []
 
@@ -31,7 +37,7 @@ class Modal(Component):
 
     def generate_html(self, multi_dropdown):
         self.input = dbc.Input(
-            id={"type": self.input_type, "uid": self.parent.uid},
+            id={"type": MODAL_INPUT + self.type, "uid": self.parent.uid},
             placeholder="Container Name",
             type="text",
             style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(200, 200, 200, 255)"}
@@ -39,16 +45,16 @@ class Modal(Component):
 
         self.button = dbc.Button(
             html.I(className="fas fa-plus fa-2x"),
-            id={"type": self.button_type, "uid": self.parent.uid},
+            id={"type": MODAL_BUTTON + self.type, "uid": self.parent.uid},
             color="success",
             style={"display": "grid", "justify-self": "end"}
         )
 
         self.dropdown = dcc.Dropdown(
-            id={"type": self.dropdown_type, "uid": self.parent.uid},
+            id={"type": MODAL_DROPDOWN + self.type, "uid": self.parent.uid},
             options=self.get_options(),
             value=None,
-            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(40, 40, 40, 255)"},
+            style={"background-color": "rgba(50, 50, 50, 255)", "color": "rgba(40, 40, 40, 255)", "font-color": "rgba(0, 0, 0, 255)"},
             multi=multi_dropdown
         )
 
@@ -75,8 +81,8 @@ class Modal(Component):
 
 class AddElementModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: Component):
-        super().__init__(app, name, "add-element-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
+        super().__init__(app, name, MODAL_ADD_ELEMENT, parent)
 
         with open("data/results.json", "r") as f:
             self.data = json.load(f)
@@ -120,8 +126,8 @@ class AddElementModal(Modal):
 
 class AddContainerModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: Component):
-        super().__init__(app, name, "add-container-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
+        super().__init__(app, name, MODAL_ADD_CONTAINER, parent)
         self.generate_html(False)
 
     def get_html(self):
@@ -141,8 +147,8 @@ class AddContainerModal(Modal):
 
 class SaveModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: Component):
-        super().__init__(app, name, "layout-save-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: component.Component):
+        super().__init__(app, name, MODAL_SAVE_LAYOUT, parent)
         self.generate_html(False)
 
     def get_html(self):
@@ -161,8 +167,8 @@ class SaveModal(Modal):
 
 class LoadModal(Modal):
 
-    def __init__(self, app: dash.Dash, name: str, parent: Component, save_directory: str):
-        super().__init__(app, name, "layout-load-modal", parent)
+    def __init__(self, app: dash.Dash, name: str, parent: component.Component, save_directory: str):
+        super().__init__(app, name, MODAL_LOAD_LAYOUT, parent)
 
         self.save_directory = save_directory
         self.load_options()
@@ -184,7 +190,3 @@ class LoadModal(Modal):
 
         return modal
 
-    def load_options(self):
-        for file_name in os.listdir(self.save_directory):
-            if os.path.isfile(os.path.join(self.save_directory, file_name)):
-                self.options.append(file_name)

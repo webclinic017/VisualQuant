@@ -6,19 +6,25 @@ import dash_html_components as html
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State, MATCH, ALL
 
-from visual_quant.components.component import Component
-from visual_quant.components.container import Container
-from visual_quant.components.modal import AddContainerModal, SaveModal, LoadModal
+import visual_quant.components.component as component
+import visual_quant.components.container as container
+import visual_quant.components.modal as modal
 import visual_quant.components.chart as chart
-from visual_quant.components.list import List
-from visual_quant.components.series import Series
-from visual_quant.components.table import Table
+import visual_quant.components.list as dash_list
+import visual_quant.components.series as series
+import visual_quant.components.table as table
 
 ICON_LINK = "https://camo.githubusercontent.com/1287ea52a264e20bf5ff3a0a31166fe03de778ee5f0a4d3dc9e88fb8340346c2/68747470733a2f2f63646e2e7175616e74636f6e6e6563742e636f6d2f7765622f692f32303138303630312d313631352d6c65616e2d6c6f676f2d736d616c6c2e706e67"
 
+PAGE_ADD_CONTAINER_BUTTON = "page-add-container-button"
+PAGE_SAVE_BUTTON = "page-save-button"
+PAGE_LOAD_BUTTON = "page-load-button"
+PAGE_RESET_BUTTON = "page-reset-button"
+PAGE_LAYOUT = "page-layout"
+
 
 # hold a tree of components and provide buttons to add further ones
-class Page(Component):
+class Page(component.Component):
     app = None
 
     def __init__(self, app: dash.Dash, name: str):
@@ -47,7 +53,7 @@ class Page(Component):
                    "justify-self": "center",
                    "margin": "10px"},
             outline=True,
-            id={"type": "open-add-container-button", "uid": id(self)}
+            id={"type": PAGE_ADD_CONTAINER_BUTTON, "uid": self.uid}
         )
 
         self.save_button = dbc.Button(
@@ -58,7 +64,7 @@ class Page(Component):
                    "backgroundColor": "rgba(0, 0, 0, 0)",
                    "justify-self": "end",
                    "margin-right": "0"},
-            id={"type": "navbar-save-button", "uid": id(self)}
+            id={"type": PAGE_SAVE_BUTTON, "uid": self.uid}
         )
 
         self.reset_button = dbc.Button(
@@ -68,7 +74,7 @@ class Page(Component):
             style={"color": "rgba(200, 200, 200, 255)",
                    "backgroundColor": "rgba(0, 0, 0, 0)",
                    "margin-right": "0"},
-            id="page-reset-button"
+            id=PAGE_RESET_BUTTON
         )
 
         self.load_button = dbc.Button(
@@ -78,7 +84,7 @@ class Page(Component):
             style={"color": "rgba(200, 200, 200, 255)",
                    "backgroundColor": "rgba(0, 0, 0, 0)",
                    "margin-right": "0"},
-            id={"type": "navbar-load-button", "uid": id(self)}
+            id={"type": PAGE_LOAD_BUTTON, "uid": self.uid}
         )
 
         self.navbar = dbc.Navbar(
@@ -100,86 +106,87 @@ class Page(Component):
         self.load_modal_name = "page-load-modal"
         self.save_modal_name = "page-save-modal"
 
-        self.add_elements_modal = AddContainerModal(app, self.add_container_modal_name, self)
-        self.load_modal = LoadModal(app, self.load_modal_name, self, self.layout_save_dir)
-        self.save_modal = SaveModal(app, self.save_modal_name, self)
+        self.add_elements_modal = modal.AddContainerModal(app, self.add_container_modal_name, self)
+        self.load_modal = modal.LoadModal(app, self.load_modal_name, self, self.layout_save_dir)
+        self.save_modal = modal.SaveModal(app, self.save_modal_name, self)
 
         # modal callbacks
 
         app.callback(
             [
-                Output({"type": "page-layout", "uid": MATCH}, "children"),
-                Output({"type": self.add_container_modal_name, "uid": MATCH}, "is_open")
+                Output({"type": PAGE_LAYOUT, "uid": MATCH}, "children"),
+                Output({"type": modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "is_open")
             ],
-            Input({"type": "open-add-container-button", "uid": MATCH}, "n_clicks"),  # open
-            Input({"type": "add-container-modal-button", "uid": MATCH}, "n_clicks"),  # close
-            Input({"type": "add-container-modal-input", "uid": MATCH}, "value"),
+            Input({"type": PAGE_ADD_CONTAINER_BUTTON, "uid": MATCH}, "n_clicks"),  # open
+            Input({"type": modal.MODAL_BUTTON + modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "n_clicks"),  # close
+            Input({"type": modal.MODAL_INPUT + modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "value"), # container name
 
-            State({"type": "page-layout", "uid": MATCH}, "children"),
-            State({"type": self.add_container_modal_name, "uid": MATCH}, "is_open"),
+            State({"type": PAGE_LAYOUT, "uid": MATCH}, "children"),
+            State({"type": modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "is_open"),
         )(self.add_container_modal_handler)
 
         app.callback(
             [
                 Output({"type": self.type, "uid": MATCH}, "children"),
-                Output({"type": "layout-load-modal", "uid": MATCH}, "is_open")
+                Output({"type": modal.MODAL_LOAD_LAYOUT, "uid": MATCH}, "is_open")
             ],
-            Input({"type": "navbar-load-button", "uid": MATCH}, "n_clicks"),  # open
-            Input({"type": "layout-load-modal-button", "uid": MATCH}, "n_clicks"),  # close
-            Input({"type": "layout-load-modal-dropdown", "uid": MATCH}, "value"),
+            Input({"type": PAGE_LOAD_BUTTON, "uid": MATCH}, "n_clicks"),  # open
+            Input({"type": modal.MODAL_BUTTON + modal.MODAL_LOAD_LAYOUT, "uid": MATCH}, "n_clicks"),  # close
+            Input({"type": modal.MODAL_DROPDOWN + modal.MODAL_LOAD_LAYOUT, "uid": MATCH}, "value"),  # file to be loaded
 
             State({"type": self.type, "uid": MATCH}, "children"),
-            State({"type": "layout-load-modal", "uid": MATCH}, "is_open")
+            State({"type": modal.MODAL_LOAD_LAYOUT, "uid": MATCH}, "is_open")
         )(self.load_modal_handler)
 
         app.callback(
-            Output({"type": "layout-save-modal", "uid": MATCH}, "is_open"),
+            Output({"type": modal.MODAL_SAVE_LAYOUT, "uid": MATCH}, "is_open"),
+            Output({"type": modal.MODAL_DROPDOWN + modal.MODAL_LOAD_LAYOUT, "uid": MATCH}, "options"),
 
-            Input({"type": "navbar-save-button", "uid": MATCH}, "n_clicks"),  # open
-            Input({"type": "layout-save-modal-button", "uid": MATCH}, "n_clicks"),  # close
-            Input({"type": "layout-save-modal-input", "uid": MATCH}, "value"),
+            Input({"type": PAGE_SAVE_BUTTON, "uid": MATCH}, "n_clicks"),  # open
+            Input({"type": modal.MODAL_BUTTON + modal.MODAL_SAVE_LAYOUT, "uid": MATCH}, "n_clicks"),  # close
+            Input({"type": modal.MODAL_INPUT + modal.MODAL_SAVE_LAYOUT, "uid": MATCH}, "value"),
 
-            State({"type": "layout-save-modal", "uid": MATCH}, "is_open"),
+            State({"type": modal.MODAL_SAVE_LAYOUT, "uid": MATCH}, "is_open"),
         )(self.save_modal_handler)
 
         app.callback(
             [
-                Output({"type": "container-layout", "uid": MATCH}, "children"),
-                Output({"type": "add-element-modal", "uid": MATCH}, "is_open")
+                Output({"type": container.CONTAINER_LAYOUT, "uid": MATCH}, "children"),
+                Output({"type": modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "is_open")
             ],
-            Input({"type": "open-add-element-modal-button", "uid": MATCH}, "n_clicks"),  # open
-            Input({"type": "add-element-modal-button", "uid": MATCH}, "n_clicks"),  # close
-            Input({"type": "add-element-modal-dropdown", "uid": MATCH}, "value"),
-            Input({"type": "add-element-modal-input", "uid": MATCH}, "value"),
+            Input({"type": container.CONTAINER_ADD_ELEMENT_BUTTON, "uid": MATCH}, "n_clicks"),  # open
+            Input({"type": modal.MODAL_BUTTON + modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "n_clicks"),  # close
+            Input({"type": modal.MODAL_DROPDOWN + modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "value"),
+            Input({"type": modal.MODAL_INPUT + modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "value"),
 
-            State({"type": "container-layout", "uid": MATCH}, "children"),
-            State({"type": "add-element-modal", "uid": MATCH}, "is_open"),
-            State({"type": "container-path", "uid": MATCH}, "className")
+            State({"type": container.CONTAINER_LAYOUT, "uid": MATCH}, "children"),
+            State({"type": modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "is_open"),
+            State({"type": container.CONTAINER_PATH, "uid": MATCH}, "className")
         )(self.add_element_modal_handler)
 
         # graph callbacks
 
         app.callback(
-            Output({"type": "chart-graph", "uid": MATCH}, "figure"),
-            Input({"type": "chart-dropdown", "uid": MATCH}, "value"),
-            State({"type": "chart", "uid": MATCH}, "className")
+            Output({"type": chart.CHART_GRAPH, "uid": MATCH}, "figure"),  # charts figure
+            Input({"type": chart.CHART_DROPDOWN, "uid": MATCH}, "value"),  # charts selected series
+            State({"type": chart.CHART_NAME, "uid": MATCH}, "className")  # chart name
         )(self.graph_dropdown)
 
         # remove container callback
 
         app.callback(
-            Output({"type": "container-root", "uid": MATCH}, "style"),
+            Output({"type": container.CONTAINER_ROOT, "uid": MATCH}, "style"),
 
-            Input({"type": "remove-container-button", "uid": MATCH}, "n_clicks"),
+            Input({"type": container.CONTAINER_REMOVE_BUTTON, "uid": MATCH}, "n_clicks"),
 
-            State({"type": "container-root", "uid": MATCH}, "style"),
-            State({"type": "container-path", "uid": MATCH}, "className")
+            State({"type": container.CONTAINER_ROOT, "uid": MATCH}, "style"),
+            State({"type": container.CONTAINER_PATH, "uid": MATCH}, "className")
         )(self.remove_container)
 
         app.callback(
             Output("root", "children"),
 
-            Input("page-reset-button", "n_clicks"),
+            Input(PAGE_RESET_BUTTON, "n_clicks"),
 
             State("root", "children")
         )(self.reset_page)
@@ -192,7 +199,7 @@ class Page(Component):
             self.navbar,
             html.Div(
                 children=children,
-                id={"type": "page-layout", "uid": self.uid},
+                id={"type": PAGE_LAYOUT, "uid": self.uid},
                 style={"display": "grid"}
             ),
             self.open_add_container_button
@@ -220,10 +227,10 @@ class Page(Component):
 
     # load list from json dict or list
     def load_list(self, name: str, path: str, data):
-        return List.from_json(self.app, name, path, data)
+        return dash_list.List.from_json(self.app, name, path, data)
 
     def load_table(self, name: str, path: str, data):
-        return Table.from_json(self.app, name, path, data)
+        return table.Table.from_json(self.app, name, path, data)
 
     def is_clicked(self, name, n):
         if name not in self.clicks:
@@ -259,22 +266,20 @@ class Page(Component):
             ele = data[k]
             ele_type = ele["type"]
 
-
-
             if ele_type == "container":
                 children = self.load_from_save(ele["children"], path)
-                container = Container(self.app, ele["name"], ele["direction"], path)
-                container.children = children
-                result.append(container.get_html())
+                container_element = container.Container(self.app, ele["name"], ele["direction"], path)
+                container_element.children = children
+                result.append(container_element.get_html())
 
             elif ele_type == "list":
                 # load the list from save json
                 result_file_data = self.json_from_path(ele["path"])
-                result.append(List.from_save(self.app, ele, result_file_data).get_html())
+                result.append(dash_list.List.from_save(self.app, ele, result_file_data).get_html())
 
             elif ele_type == "table":
                 result_file_data = self.json_from_path(ele["path"])
-                result.append(Table.from_save(self.app, ele, result_file_data).get_html())
+                result.append(table.Table.from_save(self.app, ele, result_file_data).get_html())
 
             elif ele_type == "chart":
                 # load the chart from saved json
@@ -282,6 +287,21 @@ class Page(Component):
                 result.append(chart.Chart.from_save_file(self.app, ele, result_file_data).get_html())
 
         return result
+
+    def get_layout_file_options(self):
+        options = []
+        if os.path.isdir(self.layout_save_dir):
+            for file_name in os.listdir(self.layout_save_dir):
+                if os.path.isfile(os.path.join(self.layout_save_dir, file_name)):
+                    options.append(file_name)
+
+            result = []
+            for opt in options:
+                result.append({"label": str(opt), "value": str(opt)})
+            return result
+
+        else:
+            self.logger.error(f"the save directory {self.layout_save_dir} does not exist")
 
     # patten-matching-callbacks
 
@@ -291,17 +311,19 @@ class Page(Component):
             # toggle open
             return children, True
 
-        if self.is_clicked("add container close", n_close) and input_name is not None:
-            if "." in input_name:
-                self.logger.error("container names can't container a '.'")
-                return children, is_open
-            # TODO make the layout direction changeable
-            direction = "col"
-            container = Container(self.app, input_name, direction, "")
-            children.insert(-1, container.get_html())
+        if self.is_clicked("add container close", n_close):
+            if input_name is not None and input_name not in self.layout and "." not in input_name:
 
-            self.layout[input_name] = container.json
-            return children, False
+                # TODO make the layout direction changeable
+                direction = "col"
+                container_element = container.Container(self.app, input_name, direction, "")
+                children.insert(-1, container_element.get_html())
+
+                self.layout[input_name] = container_element.json
+                return children, False
+
+            else:
+                self.logger.error("container name enter is not valid. They can not container '.' or already be in the layout")
 
         return children, is_open
 
@@ -323,9 +345,9 @@ class Page(Component):
         return children, is_open
 
     # callback
-    def save_modal_handler(self, n_open, n_close, is_open, save_name: str):
+    def save_modal_handler(self, n_open, n_close, save_name: str, is_open: bool):
         if self.is_clicked("open save", n_open):
-            return not is_open
+            return True, self.get_layout_file_options()
 
         elif self.is_clicked("close save", n_close):
             # create the output dir if it doesn't exist yet
@@ -333,15 +355,11 @@ class Page(Component):
                 os.mkdir(self.layout_save_dir)
 
             # save the layout to the file
-            # if the name hasn't changed save to the same file
-            save_name = save_name if type(save_name) is str else self.last_save_name
-            self.last_save_name = save_name
-
             with open(os.path.join(self.layout_save_dir, save_name), "w") as f:
                 json.dump(self.layout, f, indent=2)
-            return False
+            return False, self.get_layout_file_options()
 
-        return is_open
+        return is_open, self.get_layout_file_options()
 
     def add_element_modal_handler(self, n_open, n_close, dropdown_values: list, input_value: str, children, is_open: bool, path: str):
 
@@ -362,23 +380,26 @@ class Page(Component):
             # add containers and elements
             if dropdown_values is not None:
                 for value in dropdown_values:
-                    path = value.split(".")
-                    if value.split(".")[0] == "Charts":
-                        chart_ele = self.load_chart(path[-1], self.json_from_path(value))
+                    json_path = value.split(".")
+                    if json_path[0] == "Charts":
+                        chart_ele = self.load_chart(json_path[-1], self.json_from_path(value))
                         children.insert(-1, chart_ele.get_html())
-                        loc[path[-1]] = chart_ele.json
+                        loc[json_path[-1]] = chart_ele.json
                     else:
                         list_ele = self.load_list(path[-1], ".".join(path[:-1]), self.json_from_path(value))
                         children.insert(-1, list_ele.get_html())
                         loc[path[-1]] = list_ele.json
 
-            if input_value is not None and not input_value == "":
+            if input_value is not None and not input_value == "" and "." not in input_value:
 
-                direction = "col"
-                container = Container(self.app, input_value, direction, path)
-                # add the container before the button at the end
-                children.insert(-1, container.get_html())
-                loc[input_value] = container.json
+                if input_value not in loc:
+                    direction = "col"
+                    container_element = container.Container(self.app, input_value, direction, path)
+                    # add the container before the button at the end
+                    children.insert(-1, container_element.get_html())
+                    loc[input_value] = container_element.json
+                else:
+                    self.logger.warning(f"container named {input_value} already exists")
 
             return children, False
 
@@ -388,15 +409,18 @@ class Page(Component):
         fig = go.Figure(layout=chart.Chart.layout(chart_name))
         if values is not None:
             for series_name in values:
-                s = Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])
+                s = series.Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])
                 fig.add_trace(s.get_figure())
         return fig
 
     def remove_container(self, n_clicks, style, path):
         # TODO fix container only being removed after 2 click
+
         if self.is_clicked(f"remove {path}", n_clicks):
+
+            self.logger.debug(f"removing container at {path}")
             # TODO better way to delete from layout dict
-            print(f"remove container path: {path}")
+
             path_list = list(filter(None, path.split(".")))
             loc = self.layout
             for p in path_list[:-1]:
