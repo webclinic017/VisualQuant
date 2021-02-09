@@ -6,13 +6,13 @@ import dash_html_components as html
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State, MATCH, ALL
 
-import visual_quant.components.component as component
-import visual_quant.components.container as container
-import visual_quant.components.modal as modal
-import visual_quant.components.chart as chart
-import visual_quant.components.list as dash_list
-import visual_quant.components.series as series
-import visual_quant.components.table as table
+import visual_quant.web_components.component as component
+import visual_quant.web_components.container as container
+import visual_quant.web_components.modal as modal
+import visual_quant.web_components.chart as chart
+import visual_quant.web_components.list as dash_list
+import visual_quant.web_components.series as series
+import visual_quant.web_components.table as table
 
 ICON_LINK = "https://camo.githubusercontent.com/1287ea52a264e20bf5ff3a0a31166fe03de778ee5f0a4d3dc9e88fb8340346c2/68747470733a2f2f63646e2e7175616e74636f6e6e6563742e636f6d2f7765622f692f32303138303630312d313631352d6c65616e2d6c6f676f2d736d616c6c2e706e67"
 
@@ -41,7 +41,7 @@ class Page(component.Component):
         self.layout = {}
 
         # TODO configurable result file
-        with open("data/results.json", "r") as f:
+        with open(result_file, "r") as f:
             self.data = json.load(f)
 
         # html elements
@@ -119,7 +119,7 @@ class Page(component.Component):
             ],
             Input({"type": PAGE_ADD_CONTAINER_BUTTON, "uid": MATCH}, "n_clicks"),  # open
             Input({"type": modal.MODAL_BUTTON + modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "n_clicks"),  # close
-            Input({"type": modal.MODAL_INPUT + modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "value"), # container name
+            Input({"type": modal.MODAL_INPUT + modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "value"),  # container name
 
             State({"type": PAGE_LAYOUT, "uid": MATCH}, "children"),
             State({"type": modal.MODAL_ADD_CONTAINER, "uid": MATCH}, "is_open"),
@@ -163,14 +163,6 @@ class Page(component.Component):
             State({"type": modal.MODAL_ADD_ELEMENT, "uid": MATCH}, "is_open"),
             State({"type": container.CONTAINER_PATH, "uid": MATCH}, "className")
         )(self.add_element_modal_handler)
-
-        # graph callbacks
-
-        app.callback(
-            Output({"type": chart.CHART_GRAPH, "uid": MATCH}, "figure"),  # charts figure
-            Input({"type": chart.CHART_DROPDOWN, "uid": MATCH}, "value"),  # charts selected series
-            State({"type": chart.CHART_NAME, "uid": MATCH}, "className")  # chart name
-        )(self.graph_dropdown)
 
         # remove container callback
 
@@ -404,14 +396,6 @@ class Page(component.Component):
             return children, False
 
         return children, is_open
-
-    def graph_dropdown(self, values: list, chart_name: str):
-        fig = go.Figure(layout=chart.Chart.layout(chart_name))
-        if values is not None:
-            for series_name in values:
-                s = series.Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])
-                fig.add_trace(s.get_figure())
-        return fig
 
     def remove_container(self, n_clicks, style, path):
         # TODO fix container only being removed after 2 click

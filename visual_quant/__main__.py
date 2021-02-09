@@ -3,8 +3,8 @@ import dash_bootstrap_components as dbc
 import logging
 import dash_html_components as html
 
-from visual_quant.components.container import Container
-from visual_quant.components.page import Page
+from visual_quant.web_components.container import Container
+from visual_quant.web_components.page import Page
 
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
 

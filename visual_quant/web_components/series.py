@@ -4,7 +4,7 @@ import dash
 import plotly.graph_objects as go
 from enum import Enum
 
-from visual_quant.components.component import Component
+from visual_quant.web_components.component import Component
 
 
 # TODO this enum and reverse dict is ugly

@@ -6,15 +6,14 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
-from visual_quant.components.series import Series
-from visual_quant.components.component import Component
+import visual_quant.web_components.series as series
+from visual_quant.web_components.component import Component
 
 
 # callback names
 CHART_DROPDOWN = "chart-dropdown"
 CHART_GRAPH = "chart-graph"
 CHART_NAME = "chart-name"
-
 
 # provides a interactive chart using the dash graph and dropdown
 # can hold multiple series
@@ -27,8 +26,13 @@ class Chart(Component):
         super().__init__(app, name, "Charts")
         self.series = {}
 
-        self.dropdown_type = CHART_DROPDOWN
-        self.graph_type = CHART_GRAPH
+        # graph callbacks
+
+        app.callback(
+            Output({"type": CHART_GRAPH, "uid": MATCH}, "figure"),  # charts figure
+            Input({"type":.CHART_DROPDOWN, "uid": MATCH}, "value"),  # charts selected series
+            State({"type": CHART_NAME, "uid": MATCH}, "className")  # chart name
+        )(self.graph_dropdown)
 
     # constructor for directly adding series to the chart
     @classmethod
@@ -101,10 +105,19 @@ class Chart(Component):
 
         return layout
 
-    def add_series(self, series: Series):
-        if series.name in self.series:
-            self.logger.warning(f"The series named {series.name} already exists in the chart {self.name}")
-        self.series[series.name] = series
+    def graph_dropdown(self, values: list, chart_name: str):
+        fig = go.Figure(layout=Chart.layout(chart_name))
+        if values is not None:
+            for series_name in values:
+                # TODO use the json_loader
+                s = series.Series.from_json(self.app, self.data["Charts"][chart_name]["Series"][series_name])
+                fig.add_trace(s.get_figure())
+        return fig
+
+    def add_series(self, new_series: series.Series):
+        if new_series.name in self.series:
+            self.logger.warning(f"The series named {new_series.name} already exists in the chart {self.name}")
+        self.series[new_series.name] = new_series
 
     def join(self, other: "Chart"):
         self.series = {**self.series, **other.series}
@@ -130,13 +143,13 @@ class Chart(Component):
 
     def get_html(self):
 
-        drop_down = dcc.Dropdown(id={"type": self.dropdown_type, "uid": self.uid},
+        drop_down = dcc.Dropdown(id={"type": CHART_DROPDOWN, "uid": self.uid},
                                  options=self.get_options(),
                                  value=list(self.series.keys()),
                                  multi=True,
                                  style={"background-color": "rgba(0, 0, 0, 0)", "color": "rgba(30, 30, 30, 255)"})
 
-        graph = dcc.Graph({"type": self.graph_type, "uid": self.uid})
+        graph = dcc.Graph({"type": CHART_GRAPH, "uid": self.uid})
 
         self.logger.debug(f"getting html for graph {self.name}")
 

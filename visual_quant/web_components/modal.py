@@ -5,7 +5,7 @@ import dash_html_components as html
 import os
 import json
 
-import visual_quant.components.component as component
+import visual_quant.web_components.component as component
 
 
 MODAL_BUTTON = "modal-button"
@@ -84,7 +84,7 @@ class AddElementModal(Modal):
     def __init__(self, app: dash.Dash, name: str, parent: component.Component):
         super().__init__(app, name, MODAL_ADD_ELEMENT, parent)
 
-        with open("data/results.json", "r") as f:
+        with open(result_file, "r") as f:
             self.data = json.load(f)
         self.load_options(self.data)
 

@@ -2,8 +2,8 @@ import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from visual_quant.components.component import Component
-from visual_quant.components.modal import AddElementModal
+from visual_quant.web_components.component import Component
+from visual_quant.web_components.modal import AddElementModal
 
 
 CONTAINER_ADD_ELEMENT_BUTTON = "container-add-element-button"
