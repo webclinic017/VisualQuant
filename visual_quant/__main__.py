@@ -5,6 +5,7 @@ import dash_html_components as html
 
 from visual_quant.web_components.container import Container
 from visual_quant.web_components.page import Page
+from visual_quant.web_util import callbacks
 
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
 
@@ -21,6 +22,8 @@ def run():
     logger.addHandler(handler)
 
     page = Page(app, "Root Page")
+    callbacks.register_callbacks(app, page)
+
     app.layout = html.Div(page.get_html(), id="root")
 
     app.title = "LEAN Results"

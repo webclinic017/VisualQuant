@@ -13,8 +13,8 @@ class List(Component):
 
     # constructors
 
-    def __init__(self, app: dash.Dash, name: str, path: str, alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
-        super().__init__(app, name, path)
+    def __init__(self, name: str, path: str, alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
+        super().__init__(name, path)
         self.entries = pd.DataFrame()
 
         # TODO base color on theme directly
@@ -24,9 +24,9 @@ class List(Component):
         self.fill_color = fill_color
 
     @classmethod
-    def from_json(cls, app: dash.Dash, name: str, path: str, data: dict):
+    def from_json(cls, name: str, path: str, data: dict):
         # create a list with only 2 columns from a dict
-        list_obj = cls(app, name, path)
+        list_obj = cls(name, path)
         list_obj.logger.debug(f"loading list {name} from dict")
 
         # reset index to column because the datatable does not use the index
@@ -35,8 +35,8 @@ class List(Component):
         return list_obj
 
     @classmethod
-    def from_save(cls, app: dash.Dash, save_json: dict, result_file_data):
-        return cls.from_json(app, save_json["name"], save_json["path"], result_file_data)
+    def from_save(cls, save_json: dict, result_file_data):
+        return cls.from_json(save_json["name"], save_json["path"], result_file_data)
 
     # properties
 
@@ -71,7 +71,7 @@ class List(Component):
                                                      "color": self.font_color, "font_size": f"{self.font_size}px"},
                                          style_cell_conditional=[
                                              {'if': {'column_id': self.entries.columns[0]}, 'textAlign': 'left'}],
-                                         style_header={'display': 'none'},
+                                         style_header={'display': 'none', "height": "0px", "max-height": "0px"},
                                          row_selectable=False)
         else:
             self.logger.warning(f"list {self.name}, is empty")
@@ -81,7 +81,7 @@ class List(Component):
                 dbc.Card(
                     [
                         dbc.CardHeader(html.H4(self.name)),
-                        dbc.CardBody(table, style={"width": "auto"})
+                        dbc.CardBody(table, style={"width": "auto", "padding-top": "0px"})
                     ]
                 )
             ],

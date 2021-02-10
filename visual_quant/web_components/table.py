@@ -14,7 +14,7 @@ class Table(Component):
     # constructors
 
     def __init__(self, app: dash.Dash, name: str, path: str, direction: str = "vertical", alignment="left", font_size=17, font_color="rgba(200, 200, 200, 255)", fill_color="rgba(0, 0, 0, 0)"):
-        super().__init__(app, name, path)
+        super().__init__(name, path)
         self.entries = pd.DataFrame()
 
         # TODO base color on theme directly
