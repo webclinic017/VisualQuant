@@ -1,0 +1,32 @@
+{
+    "path": {
+        "name": "LEAN engine path",
+        "type": "text_input",
+        "value": "/home/odium/store/trading/Lean"
+    },
+    "environment": {
+        "name": "Enviroment",
+        "type": "selectbox",
+        "value": "backtesting",
+        "options": [
+            "live-paper",
+            "backtesting",
+            "live-interactive",
+            "live-interactive-iqfeed"
+        ]
+    },
+    "language": {
+        "name": "Language",
+        "type": "selectbox",
+        "value": "Python",
+        "options": [
+            "CSharp",
+            "Python"
+        ]
+    },
+    "encoding": {
+        "name": "Algorithm file encoding",
+        "type": "text_input",
+        "value": "utf-8"
+    }
+}
