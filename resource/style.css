@@ -2,6 +2,14 @@ th {
     text-align: left;
 }
 
-thead {
+/* .css-y37zg.e1ynspad0 thead {
     display: none;
+} */
+
+div .streamlit-expanderHeader {
+    font-size: 21px;
+}
+
+div .st-bx.st-cc.st-cd.st-ae.st-af.st-ag.st-ah.st-ai.st-aj {
+    font-size: 21px;
 }

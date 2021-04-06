@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 import requests
 import pandas as pd
-import bandl
+import yfinance as yf
 import plotly.graph_objects as go
 import os
 
@@ -21,6 +21,7 @@ def lowres_series_import(ticker, resolution, asset_type, region, df: pd.DataFram
     except:
         st.error("Data does not have the required columns")
 
+    ticker = ticker.lower()
     compression_opts = dict(method='zip', archive_name=f'{ticker}.csv')
 
     path = os.path.join(settings.get_value("path"), f"Data/{asset_type}/{region}/{resolution}/{ticker}.zip")
@@ -30,38 +31,27 @@ def lowres_series_import(ticker, resolution, asset_type, region, df: pd.DataFram
 def binance():
     pass
 
-def nasdaq(ticker: str, start_date, end_date, resolution):
+def yahoo(ticker: str, start_date, end_date, resolution, use_max):
     
-    provider = bandl.nasdaq.Nasdaq()
     try:
-        df = provider.get_data(ticker, start=start_date, end=end_date)
+        ticker_obj = yf.Ticker(ticker)
+        if use_max:
+            df = ticker_obj.history(period="max")
+        else:
+            df = ticker_obj.history(start=start_date, end=end_date)
     except:
-        st.error("Couldn't retrive data from NASDAQ api")
+        st.error("Couldn't retrive data from YAHOO api")
         return
-
-    # this evil motherfucker has trailing spaces in the columns names
-    df.rename(columns=str.strip, inplace=True)
-    df.rename(columns={"Close/Last": "Close"}, inplace=True)
-
-    df.index = pd.to_datetime(df.index)
-    df.sort_index(inplace=True)
-
-    for c in df.columns:
-        try:
-            df[c] = df[c].str.strip(" $").astype(float)
-        except:
-            pass
     
     st.success(f"Downloaded data from {df.index[0]} to {df.index[-1]}")
     lowres_series_import(ticker, "daily", "equity", "usa", df)
 
-
 providers = {
-    "NASDAQ": nasdaq,
+    "YAHOO": yahoo,
     "BINANCE": binance
 }
 
-def download(provider: str, ticker: str, start_date, end_date, resolution):
+def download(provider: str, ticker: str, start_date, end_date, resolution, use_max):
     function = providers[provider]
-    function(ticker, start_date, end_date, resolution)
+    function(ticker, start_date, end_date, resolution, use_max)
     

@@ -26,24 +26,6 @@ def candelstick(df):
     fig.update_layout(xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
 
-# data frame as table, the header is hidden for lists so add it back manually
-def create_table(data, header=True):
-    if header:
-        df = pd.DataFrame.from_dict(data)
-
-        # copy the column names into the first row
-        df.loc[-1] = df.columns
-        df.index = df.index + 1
-        df.sort_index(inplace=True)
-
-        # set the first colum to the index, then drop the row itself
-        df.set_index(df.iloc[:,0], inplace=True)
-        df.drop(df.columns[0], axis=1, inplace=True)
-        
-        st.table(df)
-    else:
-        st.table(data)
-
 # parse the chart section
 def parse_charts(data):
     charts = data["Charts"]
@@ -88,11 +70,18 @@ def parse_total_performance(data):
             st.subheader("Portfolio Statistics")
             create_list(total_performance["PortfolioStatistics"])
 
-        st.subheader("Closed Trades")
-        trades = total_performance["ClosedTrades"]
+def parse_orders(data):
+
+    expander = st.beta_expander("Closed Trades")
+    with expander:
+        trades = data["TotalPerformance"]["ClosedTrades"]
+
         for i, trade in enumerate(trades):
             trades[i]["Symbol"] = trade["Symbol"]["Value"]
-        create_table(trades)
+
+        df = pd.DataFrame.from_dict(trades)
+        df.set_index("Symbol", inplace=True)
+        st.table(df)
 
 # parse the last 2 Statistics sections
 def parse_statistics(data):
