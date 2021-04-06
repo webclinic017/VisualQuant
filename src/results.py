@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import os
-import configuration
+import settings
 import pandas as pd
 
 import plotting
@@ -26,7 +26,7 @@ def app():
     st.title("Results")
 
     # each folder in Results is an option to select
-    lean_location = configuration.get_value("path")
+    lean_location = settings.get_value("path")
     result_path = os.path.join(lean_location, "Results")
     options = [d for d in os.listdir(result_path) if os.path.isdir(os.path.join(result_path, d))]
 

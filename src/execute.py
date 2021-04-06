@@ -3,12 +3,12 @@ import os
 import json
 import commentjson
 
-import configuration
+import settings
 
 def run_algo(file, data):
     # get config values
-    lean_location = configuration.get_value("path")
-    language = configuration.get_value("language")
+    lean_location = settings.get_value("path")
+    language = settings.get_value("language")
     algorithm_location = os.path.join(lean_location, f"Algorithm.{language}")
 
     # check if the algorithm folder for the laguage exists
@@ -39,7 +39,7 @@ def run_algo(file, data):
     algo_name = file.name.split(".")[0]
 
     # change and save the laucher config
-    lauch_config["environment"] = configuration.get_value("environment")
+    lauch_config["environment"] = settings.get_value("environment")
     lauch_config["algorithm-type-name"] = algo_name
     lauch_config["algorithm-language"] = language
     lauch_config["algorithm-location"] = f"../../../Algorithm.{language}/VisualQuant/{file.name}"
@@ -78,7 +78,7 @@ def app():
         data = file.read()
         expander = st.beta_expander(file.name)
         with expander:
-            encoding = configuration.get_value("encoding")
+            encoding = settings.get_value("encoding")
             st.code(data.decode(encoding))
 
         st.text("")

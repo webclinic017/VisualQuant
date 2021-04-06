@@ -19,7 +19,7 @@ def get_value(name):
 
 def app():
     config = load_config()
-    st.title('Configuration')
+    st.title('Settings')
 
     # dynamicly create the config page from the config file
     for k, v in config.items():

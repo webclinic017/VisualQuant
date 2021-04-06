@@ -34,7 +34,7 @@ def create_table(data, header=True):
         # copy the column names into the first row
         df.loc[-1] = df.columns
         df.index = df.index + 1
-        df = df.sort_index()
+        df.sort_index(inplace=True)
 
         # set the first colum to the index, then drop the row itself
         df.set_index(df.iloc[:,0], inplace=True)

@@ -1,6 +1,6 @@
 import streamlit as st
 
-import configuration, execute, results, tools
+import settings, execute, results, tools
 
 import ui_util
 
@@ -8,7 +8,7 @@ pages = {
     "Execute": execute,
     "Results": results,
     "Tools": tools,
-    "Configuration": configuration,
+    "Settings": settings,
 }
 
 # simple selection to call the coresponding file for each page
