@@ -17,9 +17,10 @@ def lowres_series_import(ticker, resolution, asset_type, region, df: pd.DataFram
     # reorder the columns
     try:
         tmp = (df[["Open", "High", "Low", "Close"]] * 10000).astype(int)
-        df = tmp.join(df["Volume"])
+        df = tmp.join(df["Volume"].astype(int))
     except:
         st.error("Data does not have the required columns")
+        return
 
     ticker = ticker.lower()
     compression_opts = dict(method='zip', archive_name=f'{ticker}.csv')
@@ -37,8 +38,10 @@ def yahoo(ticker: str, start_date, end_date, resolution, use_max):
         ticker_obj = yf.Ticker(ticker)
         if use_max:
             df = ticker_obj.history(period="max")
+            print(df)
         else:
             df = ticker_obj.history(start=start_date, end=end_date)
+        df.dropna(inplace=True)
     except:
         st.error("Couldn't retrive data from YAHOO api")
         return
