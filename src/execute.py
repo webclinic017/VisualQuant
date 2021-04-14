@@ -47,11 +47,12 @@ def run_algo(file, data):
     with open(lauch_file, "w") as f:
         json.dump(lauch_config, f, indent=4)
 
-
+    update_docker = "Y" if settings.get_value("update docker") else "N"
     # call the shell script to start the docker container
     # TODO make it cross platform by selecting the right script to run
     args = {
-        "RESULTS_DIR": f"./Results/{algo_name}"
+        "RESULTS_DIR": f"./Results/{algo_name}",
+        "UPDATE": update_docker
     }
 
     # convert dict to <key>=<item> string list

@@ -2,11 +2,27 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+plotting_types = {
+    0: "lines",
+    1: "markers"
+}
+
 # create plotly figure from data = (name, pd.Dataframe)
-def create_figure(fig, data, mode):
+def create_figure(fig, data):
     for d in data:
-        name, df = d
-        series = go.Scatter(x=df["x"], y=df["y"], name=name, mode=mode)
+        df, name, mode = d
+        
+        style = {
+            "size": 12
+        }
+
+        if "buy" in name.lower().split():
+            style["color"] = "green"
+
+        elif "sell" in name.lower().split():
+            style["color"] = "red"
+
+        series = go.Scatter(x=df["x"], y=df["y"], name=name, mode=mode, marker=style)
         fig.add_trace(series)
     return fig
 
@@ -43,12 +59,14 @@ def parse_charts(data):
 
             try:
                 df["x"] = pd.to_datetime(df["x"], unit="s")
-                data.append((series_name, df))
+                # get the type for the plot or default to lines
+                plot_type = plotting_types.get(serie["SeriesType"], "lines")
+                data.append((df, series_name, plot_type))
             except KeyError as e:
                 st.write(f"ERROR: {e}")
                 continue
         fig = go.Figure()
-        create_figure(fig, data, "lines")
+        create_figure(fig, data)
 
         expander = st.beta_expander(chart_name)
         with expander: 
@@ -75,6 +93,9 @@ def parse_orders(data):
     expander = st.beta_expander("Closed Trades")
     with expander:
         trades = data["TotalPerformance"]["ClosedTrades"]
+
+        if len(trades) is 0:
+            return
 
         for i, trade in enumerate(trades):
             trades[i]["Symbol"] = trade["Symbol"]["Value"]

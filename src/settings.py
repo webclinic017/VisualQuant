@@ -24,15 +24,19 @@ def app():
     # dynamicly create the config page from the config file
     for k, v in config.items():
         st.header(v["name"])
+        ui_type = v["type"]
 
-        if v["type"] == "text_input":
+        if ui_type == "text_input":
             v["value"] = st.text_input("", v["value"])
 
-        elif v["type"] == "selectbox":
-            # TODO weird bug where you have to select the new value 2 times if you change it multiple times
+        elif ui_type == "selectbox":
+            # TODO bug where you have to select the new value 2 times if you change it multiple times
             options = v["options"]
             index = options.index(v["value"])
             v["value"] = st.selectbox("", options, index=index)
+
+        elif ui_type == "checkbox":
+            v["value"] = st.checkbox("", value=v["value"])
 
     write_config(config)
 

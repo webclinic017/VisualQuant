@@ -15,6 +15,11 @@
             "live-interactive-iqfeed"
         ]
     },
+    "update docker": {
+        "name": "Update Docker",
+        "type": "checkbox",
+        "value": false
+    },
     "language": {
         "name": "Language",
         "type": "selectbox",
